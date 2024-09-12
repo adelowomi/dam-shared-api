@@ -1,3 +1,5 @@
+version: '3.3'
+
 services:
   postgres:
     image: postgres:16.3-alpine
@@ -22,7 +24,7 @@ services:
     image: adminer
     restart: always
     ports:
-      - 8080:8080
+      - 8085:8080
 
   # Uncomment to use redis
   # redis:

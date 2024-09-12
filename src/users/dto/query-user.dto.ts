@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
@@ -7,15 +8,6 @@ import {
 } from 'class-validator';
 import { Transform, Type, plainToInstance } from 'class-transformer';
 import { User } from '../domain/user';
-import { RoleDto } from '../../roles/dto/role.dto';
-
-export class FilterUserDto {
-  @ApiPropertyOptional({ type: RoleDto })
-  @IsOptional()
-  @ValidateNested({ each: true })
-  @Type(() => RoleDto)
-  roles?: RoleDto[] | null;
-}
 
 export class SortUserDto {
   @ApiProperty()
@@ -23,9 +15,9 @@ export class SortUserDto {
   @IsString()
   orderBy: keyof User;
 
-  @ApiProperty()
-  @IsString()
-  order: string;
+  @ApiProperty({ enum: ['ASC', 'DESC'] })
+  @IsEnum(['ASC', 'DESC'])
+  order: 'ASC' | 'DESC';
 }
 
 export class QueryUserDto {
@@ -40,15 +32,6 @@ export class QueryUserDto {
   @IsNumber()
   @IsOptional()
   limit?: number;
-
-  @ApiPropertyOptional({ type: String })
-  @IsOptional()
-  @Transform(({ value }) =>
-    value ? plainToInstance(FilterUserDto, JSON.parse(value)) : undefined,
-  )
-  @ValidateNested()
-  @Type(() => FilterUserDto)
-  filters?: FilterUserDto | null;
 
   @ApiPropertyOptional({ type: String })
   @IsOptional()

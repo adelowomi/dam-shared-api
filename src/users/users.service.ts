@@ -1,212 +1,74 @@
-import {
-  HttpStatus,
-  Injectable,
-  UnprocessableEntityException,
-} from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { NullableType } from '../utils/types/nullable.type';
-import { FilterUserDto, SortUserDto } from './dto/query-user.dto';
-import { UserRepository } from './infrastructure/persistence/user.repository';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { UserEntity } from './infrastructure/persistence/relational/entities/user.entity';
 import { User } from './domain/user';
-import bcrypt from 'bcryptjs';
-import { AuthProvidersEnum } from '../auth/auth-providers.enum';
-import { FilesService } from '../files/files.service';
-import { RoleEnum } from '../roles/roles.enum';
-import { StatusEnum } from '../statuses/statuses.enum';
+import { UserMapper } from './infrastructure/persistence/relational/mappers/user.mapper';
 import { IPaginationOptions } from '../utils/types/pagination-options';
-import { DeepPartial } from '../utils/types/deep-partial.type';
+import { SortUserDto } from './dto/query-user.dto';
 
 @Injectable()
-export class UsersService {
+export class UserService {
   constructor(
-    private readonly usersRepository: UserRepository,
-    private readonly filesService: FilesService,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
   ) {}
 
-  async create(createProfileDto: CreateUserDto): Promise<User> {
-    const clonedPayload = {
-      provider: AuthProvidersEnum.email,
-      ...createProfileDto,
-    };
-
-    if (clonedPayload.password) {
-      const salt = await bcrypt.genSalt();
-      clonedPayload.password = await bcrypt.hash(clonedPayload.password, salt);
-    }
-
-    if (clonedPayload.email) {
-      const userObject = await this.usersRepository.findByEmail(
-        clonedPayload.email,
-      );
-      if (userObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            email: 'emailAlreadyExists',
-          },
-        });
-      }
-    }
-
-    if (clonedPayload.photo?.id) {
-      const fileObject = await this.filesService.findById(
-        clonedPayload.photo.id,
-      );
-      if (!fileObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            photo: 'imageNotExists',
-          },
-        });
-      }
-      clonedPayload.photo = fileObject;
-    }
-
-    if (clonedPayload.role?.id) {
-      const roleObject = Object.values(RoleEnum)
-        .map(String)
-        .includes(String(clonedPayload.role.id));
-      if (!roleObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            role: 'roleNotExists',
-          },
-        });
-      }
-    }
-
-    if (clonedPayload.status?.id) {
-      const statusObject = Object.values(StatusEnum)
-        .map(String)
-        .includes(String(clonedPayload.status.id));
-      if (!statusObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            status: 'statusNotExists',
-          },
-        });
-      }
-    }
-
-    return this.usersRepository.create(clonedPayload);
+  async create(userData: Partial<User>): Promise<User> {
+    const userEntity = UserMapper.toPersistence(userData as User);
+    const savedEntity = await this.userRepository.save(userEntity);
+    return UserMapper.toDomain(savedEntity);
   }
 
-  findManyWithPagination({
-    filterOptions,
-    sortOptions,
-    paginationOptions,
-  }: {
-    filterOptions?: FilterUserDto | null;
-    sortOptions?: SortUserDto[] | null;
+  async findManyWithPagination(options: {
+    sortOptions?: SortUserDto[];
     paginationOptions: IPaginationOptions;
   }): Promise<User[]> {
-    return this.usersRepository.findManyWithPagination({
-      filterOptions,
-      sortOptions,
-      paginationOptions,
+    const { sortOptions, paginationOptions } = options;
+    const query = this.userRepository.createQueryBuilder('user');
+
+    if (sortOptions?.length) {
+      sortOptions.forEach((sort) => {
+        query.addOrderBy(`user.${sort.orderBy}`, sort.order);
+      });
+    }
+
+    query
+      .skip((paginationOptions.page - 1) * paginationOptions.limit)
+      .take(paginationOptions.limit);
+
+    const entities = await query.getMany();
+    return entities.map(UserMapper.toDomain);
+  }
+
+  async findById(id: number): Promise<User> {
+    const userEntity = await this.userRepository.findOne({ where: { id: id } });
+    if (!userEntity) {
+      throw new NotFoundException(`User with ID "${id}" not found`);
+    }
+    return UserMapper.toDomain(userEntity);
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    const userEntity = await this.userRepository.findOne({
+      where: { email: email },
     });
+    return userEntity ? UserMapper.toDomain(userEntity) : null;
   }
 
-  findById(id: User['id']): Promise<NullableType<User>> {
-    return this.usersRepository.findById(id);
+  async update(id: number, updateData: Partial<User>): Promise<User> {
+    const existingUser = await this.findById(id);
+    const updatedUser = { ...existingUser, ...updateData };
+    const updatedEntity = await this.userRepository.save(
+      UserMapper.toPersistence(updatedUser),
+    );
+    return UserMapper.toDomain(updatedEntity);
   }
 
-  findByEmail(email: User['email']): Promise<NullableType<User>> {
-    return this.usersRepository.findByEmail(email);
-  }
-
-  findBySocialIdAndProvider({
-    socialId,
-    provider,
-  }: {
-    socialId: User['socialId'];
-    provider: User['provider'];
-  }): Promise<NullableType<User>> {
-    return this.usersRepository.findBySocialIdAndProvider({
-      socialId,
-      provider,
-    });
-  }
-
-  async update(
-    id: User['id'],
-    payload: DeepPartial<User>,
-  ): Promise<User | null> {
-    const clonedPayload = { ...payload };
-
-    if (
-      clonedPayload.password &&
-      clonedPayload.previousPassword !== clonedPayload.password
-    ) {
-      const salt = await bcrypt.genSalt();
-      clonedPayload.password = await bcrypt.hash(clonedPayload.password, salt);
+  async remove(id: number): Promise<void> {
+    const result = await this.userRepository.softDelete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`User with ID "${id}" not found`);
     }
-
-    if (clonedPayload.email) {
-      const userObject = await this.usersRepository.findByEmail(
-        clonedPayload.email,
-      );
-
-      if (userObject && userObject.id !== id) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            email: 'emailAlreadyExists',
-          },
-        });
-      }
-    }
-
-    if (clonedPayload.photo?.id) {
-      const fileObject = await this.filesService.findById(
-        clonedPayload.photo.id,
-      );
-      if (!fileObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            photo: 'imageNotExists',
-          },
-        });
-      }
-      clonedPayload.photo = fileObject;
-    }
-
-    if (clonedPayload.role?.id) {
-      const roleObject = Object.values(RoleEnum)
-        .map(String)
-        .includes(String(clonedPayload.role.id));
-      if (!roleObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            role: 'roleNotExists',
-          },
-        });
-      }
-    }
-
-    if (clonedPayload.status?.id) {
-      const statusObject = Object.values(StatusEnum)
-        .map(String)
-        .includes(String(clonedPayload.status.id));
-      if (!statusObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            status: 'statusNotExists',
-          },
-        });
-      }
-    }
-
-    return this.usersRepository.update(id, clonedPayload);
-  }
-
-  async remove(id: User['id']): Promise<void> {
-    await this.usersRepository.remove(id);
   }
 }

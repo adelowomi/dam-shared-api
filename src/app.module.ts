@@ -5,7 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import databaseConfig from './database/config/database.config';
 import authConfig from './auth/config/auth.config';
 import appConfig from './config/app.config';
-import mailConfig from './mail/config/mail.config';
+
 import fileConfig from './files/config/file.config';
 import path from 'path';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -13,12 +13,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { I18nModule } from 'nestjs-i18n/dist/i18n.module';
 import { HeaderResolver } from 'nestjs-i18n';
 import { TypeOrmConfigService } from './database/typeorm-config.service';
-import { MailModule } from './mail/mail.module';
+
 import { HomeModule } from './home/home.module';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { AllConfigType } from './config/config.type';
 import { SessionModule } from './session/session.module';
-import { MailerModule } from './mailer/mailer.module';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { NotificationsModule } from './notifications/notification.module';
 
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
   useClass: TypeOrmConfigService,
@@ -31,7 +32,7 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, authConfig, appConfig, mailConfig, fileConfig],
+      load: [databaseConfig, authConfig, appConfig, fileConfig],
       envFilePath: ['.env'],
     }),
     infrastructureDatabaseModule,
@@ -62,8 +63,20 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     FilesModule,
     AuthModule,
     SessionModule,
-    MailModule,
-    MailerModule,
+    NotificationsModule,
+    MailerModule.forRoot({
+      transport:{
+        service:"gmail",
+        host:"smtp.gmail.com",
+        port:587,
+        secure: true, //verify to know why false is preferble 
+        auth: {
+          user: process.env.AUTH_EMAIL,
+          pass:process.env.AUTH_PASS
+        },
+      
+      }
+    }),
     HomeModule,
   ],
 })

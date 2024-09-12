@@ -24,7 +24,7 @@ export class AuthUpdateDto {
   @IsNotEmpty()
   @IsEmail()
   @Transform(lowerCaseTransformer)
-  email?: string;
+  email?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()

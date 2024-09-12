@@ -32,12 +32,12 @@ import {
 import { NullableType } from '../utils/types/nullable.type';
 import { QueryUserDto } from './dto/query-user.dto';
 import { User } from './domain/user';
-import { UsersService } from './users.service';
+import { UserService } from './users.service';
 import { RolesGuard } from '../roles/roles.guard';
 import { infinityPagination } from '../utils/infinity-pagination';
 
 @ApiBearerAuth()
-@Roles(RoleEnum.admin)
+//@Roles(RoleEnum.USER)
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @ApiTags('Users')
 @Controller({
@@ -45,49 +45,37 @@ import { infinityPagination } from '../utils/infinity-pagination';
   version: '1',
 })
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UserService) {}
 
-  @ApiCreatedResponse({
-    type: User,
-  })
-  @SerializeOptions({
-    groups: ['admin'],
-  })
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  create(@Body() createProfileDto: CreateUserDto): Promise<User> {
-    return this.usersService.create(createProfileDto);
-  }
+  // @ApiOkResponse({
+  //   type: InfinityPaginationResponse(User),
+  // })
+  // @SerializeOptions({
+  //   groups: ['admin'],
+  // })
+  // @Get()
+  // @HttpCode(HttpStatus.OK)
+  // async findAll(
+  //   @Query() query: QueryUserDto,
+  // ): Promise<InfinityPaginationResponseDto<User>> {
+  //   const page = query?.page ?? 1;
+  //   let limit = query?.limit ?? 10;
+  //   if (limit > 50) {
+  //     limit = 50;
+  //   }
 
-  @ApiOkResponse({
-    type: InfinityPaginationResponse(User),
-  })
-  @SerializeOptions({
-    groups: ['admin'],
-  })
-  @Get()
-  @HttpCode(HttpStatus.OK)
-  async findAll(
-    @Query() query: QueryUserDto,
-  ): Promise<InfinityPaginationResponseDto<User>> {
-    const page = query?.page ?? 1;
-    let limit = query?.limit ?? 10;
-    if (limit > 50) {
-      limit = 50;
-    }
-
-    return infinityPagination(
-      await this.usersService.findManyWithPagination({
-        filterOptions: query?.filters,
-        sortOptions: query?.sort,
-        paginationOptions: {
-          page,
-          limit,
-        },
-      }),
-      { page, limit },
-    );
-  }
+  //   return infinityPagination(
+  //     await this.usersService.findManyWithPagination({
+  //       filterOptions: query?.filters,
+  //       sortOptions: query?.sort,
+  //       paginationOptions: {
+  //         page,
+  //         limit,
+  //       },
+  //     }),
+  //     { page, limit },
+  //   );
+  // }
 
   @ApiOkResponse({
     type: User,
@@ -106,25 +94,25 @@ export class UsersController {
     return this.usersService.findById(id);
   }
 
-  @ApiOkResponse({
-    type: User,
-  })
-  @SerializeOptions({
-    groups: ['admin'],
-  })
-  @Patch(':id')
-  @HttpCode(HttpStatus.OK)
-  @ApiParam({
-    name: 'id',
-    type: String,
-    required: true,
-  })
-  update(
-    @Param('id') id: User['id'],
-    @Body() updateProfileDto: UpdateUserDto,
-  ): Promise<User | null> {
-    return this.usersService.update(id, updateProfileDto);
-  }
+  // @ApiOkResponse({
+  //   type: User,
+  // })
+  // @SerializeOptions({
+  //   groups: ['admin'],
+  // })
+  // @Patch(':id')
+  // @HttpCode(HttpStatus.OK)
+  // @ApiParam({
+  //   name: 'id',
+  //   type: String,
+  //   required: true,
+  // })
+  // update(
+  //   @Param('id') id: User['id'],
+  //   @Body() updateProfileDto: UpdateUserDto,
+  // ): Promise<User | null> {
+  //   return this.usersService.update(id, updateProfileDto);
+  // }
 
   @Delete(':id')
   @ApiParam({

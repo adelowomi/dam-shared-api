@@ -1,6 +1,9 @@
-FROM node:20.16.0-alpine
+# Switch to Debian-based Node image
+# Use the Debian-based Node image
+FROM node:20-buster-slim
 
-RUN apk add --no-cache bash
+# Install bash and other dependencies
+RUN apt-get update && apt-get install -y bash
 RUN npm i -g @nestjs/cli typescript ts-node
 
 COPY package*.json /tmp/app/
