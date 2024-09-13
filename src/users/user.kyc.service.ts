@@ -20,6 +20,7 @@ import { BankDetailsDto } from './dto/bankdetails.dto';
 import { AddressProofDto } from './dto/address-proof.dto';
 import { GovernmentIdDto } from './dto/goverenment-id.dto';
 import { TaxDetailsDto } from './dto/tax-details.dto';
+import { User } from './domain/user';
 
 @Injectable()
 export class KycService {
@@ -28,7 +29,7 @@ export class KycService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
-    //private  notificationService: NotificationsService,
+    private  notificationService: NotificationsService,
     private readonly zanibarService: ZanzibarService,
     private readonly smileService: SmileService,
     private readonly filesS3Service: FilesS3Service,
@@ -36,7 +37,7 @@ export class KycService {
 
   // Passport Photograph Verification Initiation
   async initiatePassportPhotographVerification(
-    user: UserEntity,
+    user: User,
   ): Promise<string> {
     try {
       const redirectUrl =
@@ -62,9 +63,9 @@ export class KycService {
 
   // Completing Passport Photograph Verification
   async completePassportPhotographVerification(
-    user: UserEntity,
+    user: User,
     sessionId: string,
-  ): Promise<UserEntity> {
+  ): Promise<User> {
     try {
       const verificationResult =
         await this.smileService.verifyPassportPhotographSession(sessionId);
@@ -100,9 +101,9 @@ export class KycService {
 
   // Upload Signature
   async uploadSignature(
-    user: UserEntity,
+    user: User,
     file: Express.MulterS3.File,
-  ): Promise<UserEntity> {
+  ): Promise<User> {
     try {
       const uploadedFile = await this.filesS3Service.create(file);
 
@@ -130,7 +131,7 @@ export class KycService {
   }
 
   // Politically Exposed Person (PEP) Information
-  async updatePepDetails(user: UserEntity, dto: PepDto): Promise<UserEntity> {
+  async updatePepDetails(user: User, dto: PepDto): Promise<User> {
     try {
       user.PEP = dto.PEP;
       user.PEPupdated = true;
@@ -154,9 +155,9 @@ export class KycService {
 
   // Update Employment Details
   async updateEmploymentDetails(
-    user: UserEntity,
+    user: User,
     employmentDetails: EmploymentDetailsDto,
-  ): Promise<UserEntity> {
+  ): Promise<User> {
     try {
       // Map employment details to the user entity
       Object.assign(user, {
@@ -194,9 +195,9 @@ export class KycService {
   //update bank details
   // New method: Update Bank Details
   async updateBankDetails(
-    user: UserEntity,
+    user: User,
     bankDetails: BankDetailsDto,
-  ): Promise<UserEntity> {
+  ): Promise<User> {
     try {
       const isValid = await this.smileService.verifyBankAccount(
         bankDetails.bankName,
@@ -233,9 +234,9 @@ export class KycService {
 
   //next of kin collection
   async updateNextOfkin(
-    user: UserEntity,
+    user: User,
     nextofkinDetailsdto: NextOfKinDto,
-  ): Promise<UserEntity> {
+  ): Promise<User> {
     try {
       // Map employment details to the user entity
       Object.assign(user, {
@@ -272,10 +273,10 @@ export class KycService {
 
   // New method: Upload Address Proof
   async uploadAddressProof(
-    user: UserEntity,
+    user: User,
     file: Express.MulterS3.File,
     addressProofDto: AddressProofDto,
-  ): Promise<UserEntity> {
+  ): Promise<User> {
     try {
       const uploadedFile = await this.filesS3Service.create(file);
 
@@ -321,9 +322,9 @@ export class KycService {
 
   // New method: Upload Government ID
   async uploadGovernmentId(
-    user: UserEntity,
+    user: User,
     governmentIdDto: GovernmentIdDto,
-  ): Promise<UserEntity> {
+  ): Promise<User> {
     try {
       //   const uploadedFile = await this.filesS3Service.create(file);
 
@@ -368,9 +369,9 @@ export class KycService {
 
   // New method: Update Tax Details
   async updateTaxDetails(
-    user: UserEntity,
+    user: User,
     taxDetails: TaxDetailsDto,
-  ): Promise<UserEntity> {
+  ): Promise<User> {
     try {
       Object.assign(user, {
         taxLocation: taxDetails.taxLocation,
@@ -398,7 +399,7 @@ export class KycService {
 
   // New method: Get KYC Progress
   async getKycProgress(
-    user: UserEntity,
+    user: User,
   ): Promise<{ percentage: number; completedSteps: string[] }> {
     try {
       const completedSteps: string[] = [];

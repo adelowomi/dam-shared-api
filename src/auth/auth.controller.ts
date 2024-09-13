@@ -24,6 +24,7 @@ import { LoginResponseDto } from './dto/login-response.dto';
 import { NullableType } from '../utils/types/nullable.type';
 import { User } from '../users/domain/user';
 import { RefreshResponseDto } from './dto/refresh-response.dto';
+import { AuthresendOtpDto } from './dto/resendOtp.dto';
 
 @ApiTags('Auth')
 @Controller({
@@ -55,21 +56,40 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async confirmEmail(
     @Body() confirmEmailDto: AuthConfirmEmailDto,
-  ): Promise<void> {
+  ) {
     return this.service.confirmEmail(confirmEmailDto);
   }
+
+  @Post('resend-otp')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async resendOtpAfterRegistration(
+    @Body() dto: AuthresendOtpDto,
+  ) {
+    return this.service.resendOtpAfterRegistration(dto);
+  }
+
+  @Post('resend-expired-otp')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async resendExpiredOtp(
+    @Body() dto: AuthresendOtpDto,
+  ) {
+    return this.service.resendExpiredOtp(dto);
+  }
+
+
+
 
   @Post('forgot-password')
   @HttpCode(HttpStatus.NO_CONTENT)
   async forgotPassword(
     @Body() forgotPasswordDto: AuthForgotPasswordDto,
-  ): Promise<void> {
+  ) {
     return this.service.forgotPassword(forgotPasswordDto);
   }
 
   @Post('reset-password')
   @HttpCode(HttpStatus.NO_CONTENT)
-  resetPassword(@Body() resetPasswordDto: AuthResetPasswordDto): Promise<void> {
+  resetPassword(@Body() resetPasswordDto: AuthResetPasswordDto){
     return this.service.resetPassword(resetPasswordDto);
   }
 
@@ -79,7 +99,7 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   @ApiOkResponse({ type: User })
   @HttpCode(HttpStatus.OK)
-  public me(@Request() request): Promise<NullableType<User>> {
+  public me(@Request() request) {
     return this.service.me(request.user);
   }
 
@@ -100,7 +120,7 @@ export class AuthController {
   @Post('logout')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
-  public async logout(@Request() request): Promise<void> {
+  public async logout(@Request() request) {
     await this.service.logout({ sessionId: request.user.sessionId });
   }
 
@@ -113,7 +133,7 @@ export class AuthController {
   public update(
     @Request() request,
     @Body() userDto: AuthUpdateDto,
-  ): Promise<NullableType<User>> {
+  ) {
     return this.service.update(request.user, userDto);
   }
 
@@ -121,7 +141,7 @@ export class AuthController {
   @Delete('me')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
-  public async delete(@Request() request): Promise<void> {
+  public async delete(@Request() request) {
     return this.service.softDelete(request.user);
   }
 }

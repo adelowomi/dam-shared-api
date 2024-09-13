@@ -181,6 +181,10 @@ export class User {
 
   @ApiProperty({ type: Boolean })
   @IsBoolean()
+  signatureUploaded:boolean
+
+  @ApiProperty({ type: Boolean })
+  @IsBoolean()
   PEPupdated: boolean;
 
   @ApiProperty({ type: Boolean })
