@@ -21,6 +21,7 @@ import { PepDto } from './dto/KEP.dto';
 import { EmploymentDetailsDto } from './dto/employment-details.dto';
 import { BankDetailsDto } from './dto/bankdetails.dto';
 import { AddressProofDto } from './dto/address-proof.dto';
+import { User } from './domain/user';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -40,7 +41,7 @@ export class KycController {
     );
   }
 
-  @ApiCreatedResponse({ type: UserEntity })
+  @ApiCreatedResponse({ type: User })
   @Patch('complete-passport-photograph-verification')
   @HttpCode(HttpStatus.OK)
   async completePassportPhotographVerification(@Req() req, @Session() session) {
@@ -50,7 +51,7 @@ export class KycController {
     );
   }
 
-  @ApiCreatedResponse({ type: UserEntity })
+  @ApiCreatedResponse({ type: User })
   @UseInterceptors(FileInterceptor('signature'))
   @Patch('upload-signature')
   @HttpCode(HttpStatus.OK)
@@ -61,35 +62,35 @@ export class KycController {
     return await this.kycService.uploadSignature(req.user, file);
   }
 
-  @ApiCreatedResponse({ type: UserEntity })
+  @ApiCreatedResponse({ type: User })
   @Patch('update-pep-details')
   @HttpCode(HttpStatus.OK)
   async updatePepDetails(@Req() req, @Body() dto: PepDto) {
     return await this.kycService.updatePepDetails(req.user, dto);
   }
 
-  @ApiCreatedResponse({ type: UserEntity })
+  @ApiCreatedResponse({ type: User })
   @Patch('update-employment-details')
   @HttpCode(HttpStatus.OK)
   async updateEmploymentDetails(@Req() req, @Body() dto: EmploymentDetailsDto) {
     return await this.kycService.updateEmploymentDetails(req.user, dto);
   }
 
-  @ApiCreatedResponse({ type: UserEntity })
+  @ApiCreatedResponse({ type: User })
   @Patch('update-bank-details')
   @HttpCode(HttpStatus.OK)
   async updateBankDetails(@Req() req, @Body() dto: BankDetailsDto) {
     return await this.kycService.updateBankDetails(req.user, dto);
   }
 
-  @ApiCreatedResponse({ type: UserEntity })
+  @ApiCreatedResponse({ type: User })
   @Patch('update-nextOfkin-details')
   @HttpCode(HttpStatus.OK)
   async updateNextOfkin(@Req() req, @Body() dto: BankDetailsDto) {
     return await this.kycService.updateBankDetails(req.user, dto);
   }
 
-  @ApiCreatedResponse({ type: UserEntity })
+  @ApiCreatedResponse({ type: User })
   @UseInterceptors(FileInterceptor('addressProof'))
   @Patch('update-nextOfkin-details')
   @HttpCode(HttpStatus.OK)

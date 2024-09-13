@@ -183,6 +183,7 @@ export class AuthService {
         subject: 'Account Creation',
         account: user.id,
       });
+      
 
       this.logger.log(`User successfully registered: ${user.id}`);
       return { user };

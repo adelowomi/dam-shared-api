@@ -48,6 +48,12 @@ export class KycService {
       user.passportPhotographVerificationInitiated = true;
       await this.userRepository.save(user);
 
+      await this.notificationService.create({
+        message: `Hello ${user.firstName}, you have initiated.`,
+        subject: 'Account Creation',
+        account: user.id,
+      });
+
       this.logger.log(`Passport verification initiated for user ${user.id}`);
       return redirectUrl;
     } catch (error) {

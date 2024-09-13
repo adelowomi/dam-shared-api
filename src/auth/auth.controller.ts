@@ -87,11 +87,15 @@ export class AuthController {
     return this.service.forgotPassword(forgotPasswordDto);
   }
 
+
+
   @Post('reset-password')
   @HttpCode(HttpStatus.NO_CONTENT)
   resetPassword(@Body() resetPasswordDto: AuthResetPasswordDto){
     return this.service.resetPassword(resetPasswordDto);
   }
+
+  
 
   @ApiBearerAuth()
   @SerializeOptions({ groups: ['me'] })
