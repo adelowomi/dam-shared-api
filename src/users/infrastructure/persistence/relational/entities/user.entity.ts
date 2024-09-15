@@ -26,6 +26,7 @@ import { StatusEnum } from '../../../../../statuses/statuses.enum';
 import { RoleEnum } from '../../../../../roles/roles.enum';
 import { TransactionEntity } from './transactions.entity';
 import { CardEntity } from './card.entity';
+import { WalletEntity } from './wallet.entity';
 
 @Entity({
   name: 'user',
@@ -119,16 +120,16 @@ export class UserEntity extends EntityRelationalHelper {
   photo?: FileEntity | null;
 
   @ApiProperty({ enum: RoleEnum })
-  @Column({ type: 'enum', enum: RoleEnum })
+  @Column({ type: 'enum', enum: RoleEnum ,nullable:true})
   role: RoleEnum;
 
   @ApiProperty({ enum: StatusEnum })
-  @Column({ type: 'enum', enum: StatusEnum })
+  @Column({ type: 'enum', enum: StatusEnum, nullable:true })
   status?: StatusEnum;
 
   @ApiProperty()
   @Index()
-  @Column({ type: 'boolean' })
+  @Column({ type: 'boolean' ,nullable:true})
   PEP: boolean;
 
   @ApiProperty({ type: String })
@@ -248,7 +249,7 @@ export class UserEntity extends EntityRelationalHelper {
 
   @ApiProperty()
   @Index()
-  @Column({ type: 'decimal' })
+  @Column({ type: 'decimal',nullable:true })
   kycCompletionPercentage: number;
 
   @ApiProperty()
@@ -325,6 +326,10 @@ export class UserEntity extends EntityRelationalHelper {
   @ApiProperty({type:()=> CardEntity})
   @OneToMany(() => CardEntity, cards => cards.user)
   my_cards: CardEntity[];
+
+  @OneToMany(() => WalletEntity, wallet => wallet.owner)
+  my_wallet: WalletEntity;
+
 }
 
 // adelowo ajibola

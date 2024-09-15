@@ -19,6 +19,7 @@ import { Mailer } from '../mail/mail.service';
 import { SessionService } from '../session/session.service';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '../users/users.service';
+import { WalletEntity } from '../users/infrastructure/persistence/relational/entities/wallet.entity';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { UserService } from '../users/users.service';
     SessionModule,
     PassportModule,
     JwtModule.register({}),
-    TypeOrmModule.forFeature([UserEntity,NotificationsEntity,AuthOtpEntity])
+    TypeOrmModule.forFeature([UserEntity,NotificationsEntity,AuthOtpEntity,WalletEntity])
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, JwtRefreshStrategy, UserService,AnonymousStrategy,NotificationsService,Mailer,SessionService,JwtService],

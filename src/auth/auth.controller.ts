@@ -10,6 +10,7 @@ import {
   Patch,
   Delete,
   SerializeOptions,
+  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
@@ -103,7 +104,7 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   @ApiOkResponse({ type: User })
   @HttpCode(HttpStatus.OK)
-  public me(@Request() request) {
+  public me(@Req() request) {
     return this.service.me(request.user);
   }
 

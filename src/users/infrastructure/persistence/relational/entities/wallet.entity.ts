@@ -30,8 +30,7 @@ export class WalletEntity{
 
 
     @ApiProperty({ type: () => UserEntity })
-    @OneToOne(() => UserEntity, { eager: true ,onDelete:'CASCADE'})
-    @JoinColumn()
+    @ManyToOne(() => UserEntity, (user) => user.my_wallet,{ eager: true ,onDelete:'CASCADE'})
     owner:UserEntity
 
     

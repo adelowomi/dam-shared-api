@@ -2,28 +2,36 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 import { AllConfigType } from '../config/config.type';
+import { UserEntity } from '../users/infrastructure/persistence/relational/entities/user.entity';
+import { NotificationsEntity } from '../users/infrastructure/persistence/relational/entities/notifications.entity';
+import { TransactionEntity } from '../users/infrastructure/persistence/relational/entities/transactions.entity';
+import { AuthOtpEntity } from '../users/infrastructure/persistence/relational/entities/authOtp.entity';
+import { WalletEntity } from '../users/infrastructure/persistence/relational/entities/wallet.entity';
+import { CardEntity } from '../users/infrastructure/persistence/relational/entities/card.entity';
+import { FileEntity } from '../files/infrastructure/persistence/relational/entities/file.entity';
+import { SessionEntity } from '../session/infrastructure/persistence/relational/entities/session.entity';
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
-  constructor(private configService: ConfigService<AllConfigType>) {}
+  constructor(private configService: ConfigService) {}
 
   createTypeOrmOptions(): TypeOrmModuleOptions {
     return {
-      type: this.configService.get('database.type', { infer: true }),
-      url: this.configService.get('database.url', { infer: true }),
-      host: this.configService.get('database.host', { infer: true }),
-      port: this.configService.get('database.port', { infer: true }),
-      username: this.configService.get('database.username', { infer: true }),
-      password: this.configService.get('database.password', { infer: true }),
-      database: this.configService.get('database.name', { infer: true }),
-      synchronize: this.configService.get('database.synchronize', {
+      type: this.configService.get('DATABASE_TYPE', { infer: true }),
+      //url: this.configService.get('database.url', { infer: true }),
+      host: this.configService.get('DATABASE_HOST', { infer: true }),
+      port: this.configService.get('DATABASE_PORT', { infer: true }),
+      username: this.configService.get('DATABASE_USERNAME', { infer: true }),
+      password: this.configService.get('DATABASE_PASSWORD', { infer: true }),
+      database: this.configService.get('DATABASE_NAME', { infer: true }),
+      synchronize: this.configService.get('DATABASE_SYNCHRONIZE', {
         infer: true,
       }),
       dropSchema: false,
       keepConnectionAlive: true,
       logging:
         this.configService.get('app.nodeEnv', { infer: true }) !== 'production',
-      entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+        entities: [UserEntity,NotificationsEntity,TransactionEntity,AuthOtpEntity,WalletEntity,CardEntity,FileEntity,SessionEntity],
       migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
       cli: {
         entitiesDir: 'src',

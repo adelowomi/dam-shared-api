@@ -6,8 +6,5 @@ export class AuthConfirmEmailDto {
   @IsNotEmpty()
   otp: string;
 
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsEmail()
-  email: string;
+ 
 }

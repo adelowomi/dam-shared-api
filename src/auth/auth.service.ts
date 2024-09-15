@@ -65,7 +65,7 @@ export class AuthService {
   async validateLogin(loginDto: AuthEmailLoginDto): Promise<LoginResponseDto> {
     try {
       this.logger.log(`Attempting to validate login for email: ${loginDto.email}`);
-      const user = await this.usersService.findByEmail(loginDto.email);
+      const user = await this.usersRepository.findOne({where:{email:loginDto.email}});
       if (!user) {
         this.logger.warn(`Login failed: User not found for email: ${loginDto.email}`);
         throw new UnprocessableEntityException({
@@ -145,8 +145,7 @@ export class AuthService {
       throw new InternalServerErrorException('Error creating session');
     }
   }
-
-  async register(dto: AuthRegisterDto): Promise<{ user: User }> {
+  async register(dto: AuthRegisterDto): Promise<{ user: UserEntity }> {
     try {
       this.logger.log(`Attempting to register new user with email: ${dto.email}`);
       const age = this.calculateAge(dto.DOB);
@@ -186,7 +185,6 @@ export class AuthService {
         subject: 'Account Creation',
         account: user.id,
       });
-      
 
       this.logger.log(`User successfully registered: ${user.id}`);
       return { user };
@@ -195,9 +193,6 @@ export class AuthService {
       throw error;
     }
   }
-
-
-
 
   private calculateAge(dob: string): number {
     const birthDate = new Date(dob);
@@ -214,7 +209,7 @@ export class AuthService {
   }
 
   private async checkExistingEmail(email: string): Promise<void> {
-    const existingUser = await this.usersService.findByEmail(email);
+    const existingUser = await this.usersRepository.findOne({ where: { email } });
     if (existingUser) {
       throw new UnprocessableEntityException({
         status: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -227,7 +222,7 @@ export class AuthService {
     return bcrypt.hash(password, await bcrypt.genSalt());
   }
 
-  private async createUser(userData: Partial<User>): Promise<User> {
+  private async createUser(userData: Partial<UserEntity>): Promise<UserEntity> {
     const userPayload = {
       ...userData,
       role: RoleEnum.USER,
@@ -238,36 +233,30 @@ export class AuthService {
   }
 
   async confirmEmail(dto: AuthConfirmEmailDto): Promise<void> {
-   try {
-     const otpRecord = await this.verifyOtp(dto.otp, dto.email);
-     const user = await this.getUserForEmailConfirmation(dto.email);
- 
-     await this.updateUserAfterConfirmation(user);
-     await this.markOtpAsVerified(otpRecord);
-     await this.mailService.WelcomeMail(user.email, user.firstName);
-     await this.createVerificationNotification(user);
+    try {
+      const otpRecord = await this.verifyOtp(dto.otp);
+      const user = await this.getUserForEmailConfirmation(otpRecord.email);
 
-     //create a wallet for the user 
-     await this.walletRepository.save(this.walletRepository.create({
-      balance:0,
-      createdAt:new Date(),
-      owner:user
+      await this.updateUserAfterConfirmation(user);
+      await this.markOtpAsVerified(otpRecord);
+      await this.mailService.WelcomeMail(user.email, user.firstName);
+      await this.createVerificationNotification(user);
 
-     })
-    )
-    
-   } catch (error) {
-    this.logger.error(
-      `something went wrong`,
-      error.stack,
-    );
-    
-   }
+      // Create a wallet for the user
+      await this.walletRepository.save(this.walletRepository.create({
+        balance: 0,
+        createdAt: new Date(),
+        owner: user
+      }));
+    } catch (error) {
+      this.logger.error(`Something went wrong during email confirmation`, error.stack);
+      throw error;
+    }
   }
 
-  private async verifyOtp(otp: string, email: string): Promise<AuthOtpEntity> {
+  private async verifyOtp(otp: string): Promise<AuthOtpEntity> {
     const otpRecord = await this.authOtpRepository.findOne({
-      where: { otp, email },
+      where: { otp:otp },
     });
     if (!otpRecord) {
       throw new UnprocessableEntityException({
@@ -287,9 +276,9 @@ export class AuthService {
     return otpRecord;
   }
 
-  private async getUserForEmailConfirmation(email: string): Promise<User> {
-    const user = await this.usersService.findByEmail(email);
-    if (!user || user.status !== StatusEnum.INACTIVE) {
+  private async getUserForEmailConfirmation(email: string): Promise<UserEntity> {
+    const user = await this.usersRepository.findOne({where:{email:email}});
+    if (!user ) {
       throw new NotFoundException({
         status: HttpStatus.NOT_FOUND,
         error: 'notFound',
@@ -504,15 +493,22 @@ export class AuthService {
    }
   }
 
-   async me(userJwtPayload: JwtPayloadType): Promise<User | null> {
+   async me(user:UserEntity) {
     try {
-      this.logger.log(`Fetching user data for user: ${userJwtPayload.id}`);
-      return await this.usersService.findById(userJwtPayload.id);
+      this.logger.log(`Fetching user data for user: ${user.id}`);
+      const userProfile = await this.usersRepository.findOne({where:{id:user.id},relations:['my_cards','my_transactions','my_wallet']});
+      if (!user) throw new UnprocessableEntityException({
+        error:'userNotFound',
+        status:HttpStatus.UNPROCESSABLE_ENTITY
+      })
+      return userProfile
     } catch (error) {
       this.logger.error(`Error fetching user data: ${error.message}`, error.stack);
       throw new InternalServerErrorException('Error fetching user data');
     }
   }
+
+
 
   async update(
     userJwtPayload: JwtPayloadType,

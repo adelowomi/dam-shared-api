@@ -1,5 +1,11 @@
 import 'reflect-metadata';
 import { DataSource, DataSourceOptions } from 'typeorm';
+import { UserEntity } from '../users/infrastructure/persistence/relational/entities/user.entity';
+import { NotificationsEntity } from '../users/infrastructure/persistence/relational/entities/notifications.entity';
+import { TransactionEntity } from '../users/infrastructure/persistence/relational/entities/transactions.entity';
+import { AuthOtpEntity } from '../users/infrastructure/persistence/relational/entities/authOtp.entity';
+import { WalletEntity } from '../users/infrastructure/persistence/relational/entities/wallet.entity';
+import { CardEntity } from '../users/infrastructure/persistence/relational/entities/card.entity';
 
 export const AppDataSource = new DataSource({
   type: process.env.DATABASE_TYPE,
@@ -15,7 +21,7 @@ export const AppDataSource = new DataSource({
   dropSchema: false,
   keepConnectionAlive: true,
   logging: process.env.NODE_ENV !== 'production',
-  entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+  entities: [UserEntity,NotificationsEntity,TransactionEntity,AuthOtpEntity,WalletEntity,CardEntity],
   migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
   cli: {
     entitiesDir: 'src',
