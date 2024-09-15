@@ -314,123 +314,146 @@ export class AuthService {
 
 
 
-  async resendOtpAfterRegistration(dto: AuthresendOtpDto): Promise<void> {
-    const existingOtp = await this.authOtpRepository.findOne({
-      where: { email: dto.email },
-    });
-
-    const user = await this.usersService.findByEmail(dto.email);
-
-    if (!existingOtp) {
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        error: 'No OTP found for this email',
-      });
-    }
-
-    const now = new Date();
-    if (now < existingOtp.resend_time) {
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        error: 'Please wait before requesting a new OTP',
-      });
-    }
-
-    // Generate new OTP
-    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // Update timestamps
-    const oneminutelater = new Date(now.getTime() + 1 * 60000);
-    const tenminuteslater = new Date(now.getTime() + 10 * 60000);
-
-    // Update OTP record
-    await this.authOtpRepository.update(existingOtp.id, {
-      otp: newOtp,
-      verified: false,
-      expiration_time: tenminuteslater,
-      resend_time: oneminutelater,
-    });
-
-    // Send new OTP via email
-    await this.mailService.SendVerificationeMail(dto.email, newOtp);
+  async resendOtpAfterRegistration(dto: AuthresendOtpDto): Promise<any> {
+   try {
+     const existingOtp = await this.authOtpRepository.findOne({
+       where: { email: dto.email },
+     });
+ 
+     const user = await this.usersService.findByEmail(dto.email);
+ 
+     if (!existingOtp) {
+       throw new UnprocessableEntityException({
+         status: HttpStatus.UNPROCESSABLE_ENTITY,
+         error: 'No OTP found for this email',
+       });
+     }
+ 
+     const now = new Date();
+     if (now < existingOtp.resend_time) {
+       throw new UnprocessableEntityException({
+         status: HttpStatus.UNPROCESSABLE_ENTITY,
+         error: 'Please wait before requesting a new OTP',
+       });
+     }
+ 
+     // Generate new OTP
+     const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+ 
+     // Update timestamps
+     const oneminutelater = new Date(now.getTime() + 1 * 60000);
+     const tenminuteslater = new Date(now.getTime() + 10 * 60000);
+ 
+     // Update OTP record
+     await this.authOtpRepository.update(existingOtp.id, {
+       otp: newOtp,
+       verified: false,
+       expiration_time: tenminuteslater,
+       resend_time: oneminutelater,
+     });
+ 
+     // Send new OTP via email
+     await this.mailService.SendVerificationeMail(dto.email, newOtp);
+     return {message:'new otp sent successfully'}
+   } catch (error) {
+    throw error
+    
+   }
   }
 
-  async resendExpiredOtp(dto: AuthresendOtpDto): Promise<void> {
-    const existingOtp = await this.authOtpRepository.findOne({
-      where: { email: dto.email },
-    });
-
-    if (!existingOtp) {
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        error: 'No OTP found for this email',
+  async resendExpiredOtp(dto: AuthresendOtpDto): Promise<any> {
+    try {
+      const existingOtp = await this.authOtpRepository.findOne({
+        where: { email: dto.email },
       });
-    }
-
-    const now = new Date();
-    if (now < existingOtp.expiration_time) {
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        error: 'Current OTP has not expired yet',
+  
+      if (!existingOtp) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          error: 'No OTP found for this email',
+        });
+      }
+  
+      const now = new Date();
+      if (now < existingOtp.expiration_time) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          error: 'Current OTP has not expired yet',
+        });
+      }
+  
+      // Generate new OTP
+      const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+  
+      // Update timestamps
+      const tenminuteslater = new Date(now.getTime() + 10 * 60000);
+  
+      // Update OTP record
+      await this.authOtpRepository.update(existingOtp.id, {
+        otp: newOtp,
+        verified: false,
+        expiration_time: tenminuteslater,
+        resend_time: now, // Reset resend_time to now
       });
+  
+      // Send new OTP via email
+      await this.mailService.SendVerificationeMail(dto.email, newOtp);
+
+      return {message:'new otp sent successfully'}
+    } catch (error) {
+      throw error
+      
     }
-
-    // Generate new OTP
-    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // Update timestamps
-    const tenminuteslater = new Date(now.getTime() + 10 * 60000);
-
-    // Update OTP record
-    await this.authOtpRepository.update(existingOtp.id, {
-      otp: newOtp,
-      verified: false,
-      expiration_time: tenminuteslater,
-      resend_time: now, // Reset resend_time to now
-    });
-
-    // Send new OTP via email
-    await this.mailService.SendVerificationeMail(dto.email, newOtp);
   }
 
-  async forgotPassword(dto: AuthForgotPasswordDto): Promise<void> {
-    const user = await this.usersService.findByEmail(dto.email);
 
-    if (!user) {
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: {
-          email: 'emailNotExists',
+
+  async forgotPassword(dto: AuthForgotPasswordDto): Promise<any> {
+try {
+      const user = await this.usersService.findByEmail(dto.email);
+  
+      if (!user) {
+        throw new UnprocessableEntityException({
+          status: HttpStatus.UNPROCESSABLE_ENTITY,
+          errors: {
+            email: 'emailNotExists',
+          },
+        });
+      }
+  
+      const tokenExpiresIn = this.configService.getOrThrow('auth.forgotExpires', {
+        infer: true,
+      });
+  
+      const tokenExpires = Date.now() + ms(tokenExpiresIn);
+  
+      const hash = await this.jwtService.signAsync(
+        {
+          forgotUserId: user.id,
         },
-      });
-    }
+        {
+          secret: this.configService.getOrThrow('auth.forgotSecret', {
+            infer: true,
+          }),
+          expiresIn: tokenExpiresIn,
+        },
+      );
+  
+      await this.mailService.SendPasswordResetLinkMail(
+        dto.email,
+        hash,
+        user.firstName,
+  
+      );
+      return {messge:'password reset link sent successfully'}
+} catch (error) {
+  throw error 
+  
+}
 
-    const tokenExpiresIn = this.configService.getOrThrow('auth.forgotExpires', {
-      infer: true,
-    });
-
-    const tokenExpires = Date.now() + ms(tokenExpiresIn);
-
-    const hash = await this.jwtService.signAsync(
-      {
-        forgotUserId: user.id,
-      },
-      {
-        secret: this.configService.getOrThrow('auth.forgotSecret', {
-          infer: true,
-        }),
-        expiresIn: tokenExpiresIn,
-      },
-    );
-
-    await this.mailService.SendPasswordResetLinkMail(
-      dto.email,
-      hash,
-      user.firstName,
-    );
   }
 
-  async resetPassword(dto: AuthResetPasswordDto): Promise<void> {
+  async resetPassword(dto: AuthResetPasswordDto): Promise<any> {
    try {
      const user = await this.usersService.findByEmail(dto.email);
      try {
@@ -483,8 +506,11 @@ export class AuthService {
       subject: 'Password Reset',
       account: user.id,
     });
+    
 
     this.logger.log(`User successfully Reset Password: ${user.id}`);
+
+    return {message:'password reset successful'}
 
    } catch (error) {
     this.logger.error(`Reset Password failed: ${error.message}`, error.stack);
