@@ -505,6 +505,214 @@ export class Mailer {
       </html>`;
     await this.mailerservice.sendMail({ to: email, subject, html: content });
   }
+
+
+  async sendFundingConfirmation(email: string, amount: number): Promise<void> {
+    const subject = 'Account Funding Confirmation';
+    const content = `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Account Funding Confirmation</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          background-color: #f2f2f2;
+          color: #333333;
+          line-height: 1.6;
+          margin: 0;
+          padding: 0;
+        }
+        .container {
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+          background-color: #ffffff;
+          border-radius: 10px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .logo {
+          text-align: center;
+          margin-bottom: 10px;
+        }
+        .heading {
+          text-align: center;
+          color: #53B1FD;
+          font-size: 24px;
+          margin-bottom: 10px;
+        }
+        .message {
+          text-align: center;
+          font-size: 16px;
+          margin-bottom: 20px;
+        }
+        .amount {
+          text-align: center;
+          font-size: 30px;
+          color: #53B1FD;
+          font-weight: bold;
+          margin-bottom: 20px;
+        }
+        .footer {
+          text-align: center;
+          margin-top: 20px;
+          color: #777777;
+        }
+        .social-icons {
+          margin-top: 10px;
+        }
+        .social-icons img {
+          width: 30px;
+          margin: 0 5px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="logo">
+          <!-- Add your logo here -->
+        </div>
+        <h1 class="heading">Account Funding Confirmation</h1>
+        <p class="message">Your account has been successfully funded with:</p>
+        <p class="amount">NGN ${amount}</p>
+        <p class="message">Thank you for using our service. If you did not initiate this transaction, please contact our support team immediately.</p>
+        <div class="footer">
+          <p>Ostra Logistics</p>
+          <div class="social-icons">
+            <a href="https://facebook.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/facebook-new.png" alt="Facebook"></a>
+            <a href="https://twitter.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/twitter.png" alt="Twitter"></a>
+            <a href="https://instagram.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/instagram-new.png" alt="Instagram"></a>
+            <a href="https://tiktok.com/@ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/tiktok.png" alt="TikTok"></a>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+    await this.mailerservice.sendMail({ to: email, subject, html: content });
+  }
+
+
+
+  async sendCardAddedNotification(email: string, cardType:string,last4Digits:string,expiryMonth:string,expiryYear:string): Promise<void> {
+    const subject = 'New Card Added';
+    const content = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Card Added</title>
+  <style>
+    /* Same style as the previous email */
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <!-- Add your logo here -->
+    </div>
+    <h1 class="heading">New Card Added</h1>
+    <p class="message">A new card has been successfully added to your account.</p>
+    <p class="message">Card Details:</p>
+    <p class="message">
+      Card Type: ${cardType}<br>
+      Last 4 Digits: ${last4Digits}<br>
+      Expiry: ${expiryMonth}/${expiryYear}
+    </p>
+    <p class="message">If you did not add this card, please contact our support team immediately.</p>
+    <div class="footer">
+      <p>Ostra Logistics</p>
+      <div class="social-icons">
+      <a href="https://facebook.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/facebook-new.png" alt="Facebook"></a>
+      <a href="https://twitter.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/twitter.png" alt="Twitter"></a>
+      <a href="https://instagram.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/instagram-new.png" alt="Instagram"></a>
+      <a href="https://tiktok.com/@ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/tiktok.png" alt="TikTok"></a>
+    </div>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+    await this.mailerservice.sendMail({ to: email, subject, html: content });
+  }
+
+  async sendCardRemovedNotification(email: string, cardType:string, last4Digits:string): Promise<void> {
+    const subject = 'Card Removed';
+    const content = `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Card Removed</title>
+      <style>
+        /* Same style as the previous emails */
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="logo">
+          <!-- Add your logo here -->
+        </div>
+        <h1 class="heading">Card Removed</h1>
+        <p class="message">A card has been removed from your account.</p>
+        <p class="message">Card Details:</p>
+        <p class="message">
+          Card Type: ${cardType}<br>
+          Last 4 Digits: ${last4Digits}
+        </p>
+        <p class="message">If you did not remove this card, please contact our support team immediately.</p>
+        <div class="footer">
+          <p>Ostra Logistics</p>
+          <div class="social-icons">
+          <a href="https://facebook.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/facebook-new.png" alt="Facebook"></a>
+          <a href="https://twitter.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/twitter.png" alt="Twitter"></a>
+          <a href="https://instagram.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/instagram-new.png" alt="Instagram"></a>
+          <a href="https://tiktok.com/@ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/tiktok.png" alt="TikTok"></a>
+        </div>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+    await this.mailerservice.sendMail({ to: email, subject, html: content });
+  }
+
+  async sendWithdrawalConfirmation(email: string, amount: number): Promise<void> {
+    const subject = 'Withdrawal Confirmation';
+    const content = `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Withdrawal Confirmation</title>
+      <style>
+        /* Same style as the previous emails */
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="logo">
+          <!-- Add your logo here -->
+        </div>
+        <h1 class="heading">Withdrawal Confirmation</h1>
+        <p class="message">A withdrawal has been processed from your account:</p>
+        <p class="amount">NGN ${amount}</p>
+        <p class="message">The funds have been sent to your registered bank account.</p>
+        <p class="message">If you did not initiate this withdrawal, please contact our support team immediately.</p>
+        <div class="footer">
+          <p>Ostra Logistics</p>
+          <div class="social-icons">
+            <!-- Same social icons as the previous emails -->
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+    `;
+    await this.mailerservice.sendMail({ to: email, subject, html: content });
+  }
+
   
   
 }

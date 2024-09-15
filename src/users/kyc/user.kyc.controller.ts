@@ -14,14 +14,14 @@ import {
 import { KycService } from './user.kyc.service';
 import { ApiBearerAuth, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from '../roles/roles.guard';
-import { UserEntity } from './infrastructure/persistence/relational/entities/user.entity';
+import { RolesGuard } from '../../roles/roles.guard';
+import { UserEntity } from '../infrastructure/persistence/relational/entities/user.entity';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { PepDto } from './dto/KEP.dto';
-import { EmploymentDetailsDto } from './dto/employment-details.dto';
-import { BankDetailsDto } from './dto/bankdetails.dto';
-import { AddressProofDto } from './dto/address-proof.dto';
-import { User } from './domain/user';
+import { PepDto } from '../dto/KEP.dto';
+import { EmploymentDetailsDto } from '../dto/employment-details.dto';
+import { BankDetailsDto } from '../dto/bankdetails.dto';
+import { AddressProofDto } from '../dto/address-proof.dto';
+import { User } from '../domain/user';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)

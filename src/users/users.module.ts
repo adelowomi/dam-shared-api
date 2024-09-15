@@ -12,13 +12,16 @@ import { AuthOtpEntity } from './infrastructure/persistence/relational/entities/
 import { ZanzibarService } from '../utils/services/zanibar.service';
 import { SmileService } from '../utils/services/smileID.service';
 import { NotificationsEntity } from './infrastructure/persistence/relational/entities/notifications.entity';
+import { KycService } from './kyc/user.kyc.service';
+import { KycController } from './kyc/user.kyc.controller';
+import { FilesS3Service } from '../files/infrastructure/uploader/s3/files.service';
 
 //const infrastructurePersistenceModule = RelationalUserPersistenceModule;
 
 @Module({
   imports: [ FilesModule,TypeOrmModule.forFeature([UserEntity,AuthOtpEntity,NotificationsEntity])],
-  controllers: [UsersController],
-  providers: [UserService,NotificationsService,ZanzibarService,SmileService],
+  controllers: [UsersController,KycController],
+  providers: [UserService,NotificationsService,ZanzibarService,SmileService,KycService,FilesS3Service],
   exports: [UserService],
 })
 export class UsersModule {}

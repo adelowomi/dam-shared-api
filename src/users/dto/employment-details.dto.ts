@@ -34,7 +34,7 @@ enum InvestmentSource {
 }
 
 export class EmploymentDetailsDto {
-  @ApiProperty({ type: Enumerator })
+  @ApiProperty({ enum:EmploymentStatus })
   @IsEnum(EmploymentStatus)
   employmentStatus: EmploymentStatus;
 
@@ -74,7 +74,7 @@ export class EmploymentDetailsDto {
   @IsPhoneNumber('NG')
   companyPhone: string;
 
-  @ApiProperty({ type: Enumerator })
+  @ApiProperty({ enum:IncomeBand })
   @ValidateIf((o) =>
     ['Full-time employed', 'Part-time employed', 'Self-employed'].includes(
       o.employmentStatus,
@@ -83,7 +83,7 @@ export class EmploymentDetailsDto {
   @IsEnum(IncomeBand)
   incomeBand: IncomeBand;
 
-  @ApiProperty({ type: Enumerator })
+  @ApiProperty({ enum:InvestmentSource })
   @IsEnum(InvestmentSource)
   investmentSource: InvestmentSource;
 

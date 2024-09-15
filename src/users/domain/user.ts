@@ -15,6 +15,7 @@ import { StatusEnum } from '../../statuses/statuses.enum';
 import { FileEntity } from '../../files/infrastructure/persistence/relational/entities/file.entity';
 import { AuthProvidersEnum } from '../../auth/auth-providers.enum';
 import { RoleEnum } from '../../roles/roles.enum';
+import { TransactionEntity } from '../infrastructure/persistence/relational/entities/transactions.entity';
 
 const idType = Number;
 export class User {
@@ -39,6 +40,10 @@ export class User {
   @Expose({ groups: ['me'] })
   @IsEnum(AuthProvidersEnum)
   provider: AuthProvidersEnum;
+
+  @ApiProperty({ type: String, example: 'mr, ms, mrs, miss' })
+  @IsString()
+  title: string;
 
   @ApiProperty({ type: String, example: 'John' })
   @IsString()
@@ -152,6 +157,14 @@ export class User {
 
   @ApiProperty({ type: String })
   @IsString()
+  nextOfKinFirstname: string;
+
+  @ApiProperty({ type: String })
+  @IsString()
+  nextOfKinPhone: string;
+
+  @ApiProperty({ type: String })
+  @IsString()
   @IsEmail()
   nextOfKinEmail: string;
 
@@ -230,6 +243,9 @@ export class User {
   @ApiProperty({ enum: StatusEnum })
   @IsEnum(StatusEnum)
   status?: StatusEnum;
+
+  @ApiProperty({type:()=> TransactionEntity})
+  my_transactions?: TransactionEntity[];
 
   @ApiProperty()
   @IsDate()

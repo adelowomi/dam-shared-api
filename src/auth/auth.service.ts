@@ -41,6 +41,7 @@ import { AuthresendOtpDto } from './dto/resendOtp.dto';
 import { AuthForgotPasswordDto } from './dto/auth-forgot-password.dto';
 import { AuthResetPasswordDto } from './dto/auth-reset-password.dto';
 import { Mailer } from '../mail/mail.service';
+import { WalletEntity } from '../users/infrastructure/persistence/relational/entities/wallet.entity';
 
 @Injectable()
 export class AuthService {
@@ -52,6 +53,8 @@ export class AuthService {
     private readonly usersRepository: Repository<UserEntity>,
     @InjectRepository(AuthOtpEntity)
     private readonly authOtpRepository: Repository<AuthOtpEntity>,
+    @InjectRepository(WalletEntity)
+    private readonly walletRepository:Repository<WalletEntity>,
     private usersService: UserService,
     private sessionService: SessionService,
     private mailService: Mailer,
@@ -243,6 +246,16 @@ export class AuthService {
      await this.markOtpAsVerified(otpRecord);
      await this.mailService.WelcomeMail(user.email, user.firstName);
      await this.createVerificationNotification(user);
+
+     //create a wallet for the user 
+     await this.walletRepository.save(this.walletRepository.create({
+      balance:0,
+      createdAt:new Date(),
+      owner:user
+
+     })
+    )
+    
    } catch (error) {
     this.logger.error(
       `something went wrong`,

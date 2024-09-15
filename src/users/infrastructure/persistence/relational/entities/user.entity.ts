@@ -10,6 +10,7 @@ import {
   UpdateDateColumn,
   JoinColumn,
   OneToOne,
+  OneToMany,
 } from 'typeorm';
 import { FileEntity } from '../../../../../files/infrastructure/persistence/relational/entities/file.entity';
 
@@ -23,6 +24,8 @@ import { Exclude, Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { StatusEnum } from '../../../../../statuses/statuses.enum';
 import { RoleEnum } from '../../../../../roles/roles.enum';
+import { TransactionEntity } from './transactions.entity';
+import { CardEntity } from './card.entity';
 
 @Entity({
   name: 'user',
@@ -304,16 +307,24 @@ export class UserEntity extends EntityRelationalHelper {
   signatureImagePath: string;
 
   @ApiProperty()
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamp', nullable:true })
   createdAt: Date;
 
   @ApiProperty()
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamp' , nullable:true})
   updatedAt: Date;
 
   @ApiProperty()
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamp', nullable:true })
   deletedAt: Date;
+
+  @ApiProperty({type:()=> TransactionEntity})
+  @OneToMany(() => TransactionEntity, transaction => transaction.user)
+  my_transactions: TransactionEntity[];
+
+  @ApiProperty({type:()=> CardEntity})
+  @OneToMany(() => CardEntity, cards => cards.user)
+  my_cards: CardEntity[];
 }
 
 // adelowo ajibola

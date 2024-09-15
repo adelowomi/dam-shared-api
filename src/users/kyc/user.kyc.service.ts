@@ -8,19 +8,19 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NotificationsService } from '../notifications/notifications.service';
-import { ZanzibarService } from '../utils/services/zanibar.service';
-import { SmileService } from '../utils/services/smileID.service';
-import { FilesS3Service } from '../files/infrastructure/uploader/s3/files.service';
-import { UserEntity } from './infrastructure/persistence/relational/entities/user.entity';
-import { PepDto } from './dto/KEP.dto';
-import { EmploymentDetailsDto } from './dto/employment-details.dto';
-import { NextOfKinDto } from './dto/next-of-kin.dto';
-import { BankDetailsDto } from './dto/bankdetails.dto';
-import { AddressProofDto } from './dto/address-proof.dto';
-import { GovernmentIdDto } from './dto/goverenment-id.dto';
-import { TaxDetailsDto } from './dto/tax-details.dto';
-import { User } from './domain/user';
+import { NotificationsService } from '../../notifications/notifications.service';
+import { ZanzibarService } from '../../utils/services/zanibar.service';
+import { SmileService } from '../../utils/services/smileID.service';
+import { FilesS3Service } from '../../files/infrastructure/uploader/s3/files.service';
+import { UserEntity } from '../infrastructure/persistence/relational/entities/user.entity';
+import { PepDto } from '../dto/KEP.dto';
+import { EmploymentDetailsDto } from '../dto/employment-details.dto';
+import { NextOfKinDto } from '../dto/next-of-kin.dto';
+import { BankDetailsDto } from '../dto/bankdetails.dto';
+import { AddressProofDto } from '../dto/address-proof.dto';
+import { GovernmentIdDto } from '../dto/goverenment-id.dto';
+import { TaxDetailsDto } from '../dto/tax-details.dto';
+import { User } from '../domain/user';
 
 @Injectable()
 export class KycService {
@@ -49,8 +49,8 @@ export class KycService {
       await this.userRepository.save(user);
 
       await this.notificationService.create({
-        message: `Hello ${user.firstName}, you have initiated.`,
-        subject: 'Account Creation',
+        message: `Hello ${user.firstName}, you have initiated pasport pgotograph verification.`,
+        subject: 'KYC phase initialization after registration',
         account: user.id,
       });
 
@@ -90,6 +90,12 @@ export class KycService {
       ); // Ensuring it doesn't exceed 100%
       await this.userRepository.save(user);
 
+      await this.notificationService.create({
+        message: `Hello ${user.firstName}, you have completed the  pasport photograph verification process.`,
+        subject: 'KYC phase 1',
+        account: user.id,
+      });
+
       this.logger.log(
         `Passport verification completed successfully for user ${user.id}`,
       );
@@ -125,6 +131,12 @@ export class KycService {
       );
       await this.userRepository.save(user);
 
+      await this.notificationService.create({
+        message: `Hello ${user.firstName}, you have successfully uploaded a signature.`,
+        subject: 'KYC phase 2',
+        account: user.id,
+      });
+
       this.logger.log(`Signature uploaded successfully for user ${user.id}`);
       return user;
     } catch (error) {
@@ -147,6 +159,12 @@ export class KycService {
         100,
       );
       await this.userRepository.save(user);
+
+      await this.notificationService.create({
+        message: `Hello ${user.firstName}, you have successfully updated a PEP detail.`,
+        subject: 'KYC phase 3',
+        account: user.id,
+      });
 
       this.logger.log(`PEP details updated for user ${user.id}`);
       return user;
@@ -184,6 +202,12 @@ export class KycService {
       });
 
       await this.userRepository.save(user);
+
+      await this.notificationService.create({
+        message: `Hello ${user.firstName}, you have successfully updated your employment details.`,
+        subject: 'KYC phase 4',
+        account: user.id,
+      });
 
       this.logger.log(`Employment details updated for user ${user.id}`);
       return user;
@@ -227,6 +251,12 @@ export class KycService {
 
       await this.userRepository.save(user);
 
+      await this.notificationService.create({
+        message: `Hello ${user.firstName}, you have successfully updated your bank details.`,
+        subject: 'KYC phase 5',
+        account: user.id,
+      });
+
       this.logger.log(`Bank details updated for user ${user.id}`);
       return user;
     } catch (error) {
@@ -263,6 +293,12 @@ export class KycService {
       });
 
       await this.userRepository.save(user);
+
+      await this.notificationService.create({
+        message: `Hello ${user.firstName}, you have successfully updated next of kin details.`,
+        subject: 'KYC phase 6',
+        account: user.id,
+      });
 
       this.logger.log(`NextOFKin details updated for user ${user.id}`);
       return user;
@@ -315,6 +351,13 @@ export class KycService {
 
       await this.userRepository.save(user);
 
+      await this.notificationService.create({
+        message: `Hello ${user.firstName}, you have successfully uploaded address proof.`,
+        subject: 'KYC phase 7 ',
+        account: user.id,
+      });
+
+
       this.logger.log(`Address proof uploaded for user ${user.id}`);
       return user;
     } catch (error) {
@@ -362,6 +405,12 @@ export class KycService {
 
       await this.userRepository.save(user);
 
+      await this.notificationService.create({
+        message: `Hello ${user.firstName}, you have successfully updated a valid government ID.`,
+        subject: 'KYC phase 8',
+        account: user.id,
+      });
+
       this.logger.log(`Government ID uploaded for user ${user.id}`);
       return user;
     } catch (error) {
@@ -391,6 +440,12 @@ export class KycService {
       });
 
       await this.userRepository.save(user);
+
+      await this.notificationService.create({
+        message: `Hello ${user.firstName}, you have successfully updated tax details.`,
+        subject: 'KYC phase 9',
+        account: user.id,
+      });
 
       this.logger.log(`Tax details updated for user ${user.id}`);
       return user;
