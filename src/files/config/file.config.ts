@@ -6,7 +6,7 @@ import { FileDriver, FileConfig } from './file-config.type';
 
 class EnvironmentVariablesValidator {
   @IsEnum(FileDriver)
-  FILE_DRIVER: FileDriver;
+  FILE_DRIVER: string;
 
   @ValidateIf((envValues) =>
     [FileDriver.S3, FileDriver.S3_PRESIGNED].includes(envValues.FILE_DRIVER),
