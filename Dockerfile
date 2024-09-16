@@ -18,6 +18,7 @@ COPY tsconfig.build.json ./
 COPY tsconfig.json ./
 COPY package.json ./
 COPY package-lock.json ./
+COPY .env ./
 RUN npm install
 ADD ./src ./src
 # ADD ./db ./db
