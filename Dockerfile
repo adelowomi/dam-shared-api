@@ -4,9 +4,15 @@ FROM node:20-buster-slim
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
+RUN apt-get update && apt-get install -y bash
+
 
 EXPOSE 80
 EXPOSE 443
+
+COPY ./startup.relational.dev.sh /opt/startup.relational.dev.sh
+RUN chmod +x /opt/startup.relational.dev.sh
+
 
 COPY tsconfig.build.json ./
 COPY tsconfig.json ./
@@ -18,7 +24,7 @@ ADD ./src ./src
 
 RUN npm run build
 
-CMD [ "node", "dist/src/main.js" ]
+# CMD [ "node", "dist/src/main.js" ]
 
 # # Install bash and other dependencies
 # RUN apt-get update && apt-get install -y bash
@@ -40,4 +46,4 @@ CMD [ "node", "dist/src/main.js" ]
 # RUN if [ ! -f .env ]; then cp env-example-relational .env; fi
 # RUN npm run build
 
-# CMD ["/opt/startup.relational.dev.sh"]
+CMD ["/opt/startup.relational.dev.sh"]
