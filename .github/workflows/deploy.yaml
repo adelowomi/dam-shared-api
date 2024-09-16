@@ -29,9 +29,9 @@ jobs:
 
       - name: Copy file from S3
         run: | 
-          ls  
+          ls -a
           aws s3 cp ${{secrets.APP_CONFIG_S3_PATH_STG}} .env
-          ls
+          ls -a
 
       - name: Build Docker Image
         run: ./.github/scripts/build_and_publish_image.sh ${{env.ECR_REGISTRY}}
