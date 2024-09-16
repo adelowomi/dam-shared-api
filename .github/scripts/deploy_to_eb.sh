@@ -4,7 +4,8 @@ TAG_NAME=$(cat "tag_name.txt")
 ENVIRONMENT=$1
 APPLICATION=$2
 AWS_REGION=$3
-ECR_IMAGE="963850480156.dkr.ecr.eu-west-2.amazonaws.com/asset-mgt-fe:${TAG_NAME}"
+ECR_REGISTRY=$4
+ECR_IMAGE="${ECR_REGISTRY}:${TAG_NAME}"
 
 set -e
 
