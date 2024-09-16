@@ -5,8 +5,8 @@ import validateConfig from '../../utils/validate-config';
 import { FileDriver, FileConfig } from './file-config.type';
 
 class EnvironmentVariablesValidator {
-  @IsEnum(FileDriver)
-  FILE_DRIVER: string;
+  // @IsEnum(FileDriver)
+  FILE_DRIVER: FileDriver;
 
   @ValidateIf((envValues) =>
     [FileDriver.S3, FileDriver.S3_PRESIGNED].includes(envValues.FILE_DRIVER),
@@ -34,8 +34,8 @@ class EnvironmentVariablesValidator {
 }
 
 export default registerAs<FileConfig>('file', () => {
+  console.log(process.env.FILE_DRIVER, "file driver called her")
   validateConfig(process.env, EnvironmentVariablesValidator);
-
   return {
     driver:
       (process.env.FILE_DRIVER as FileDriver | undefined) ?? FileDriver.LOCAL,
