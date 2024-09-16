@@ -49,3 +49,5 @@ jobs:
           name: tag-file
       - name: Deploy to Elastic Beanstalk
         run: ./.github/scripts/deploy_to_eb.sh ${{secrets.STG_ENVIRONMENT}} ${{secrets.STG_APPLICATION}} ${{secrets.AWS_REGION}} ${{env.ECR_REGISTRY}}
+
+        # trigger deployment o development branch
