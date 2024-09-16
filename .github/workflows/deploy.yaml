@@ -28,7 +28,10 @@ jobs:
           aws-region: ${{secrets.AWS_REGION}}
 
       - name: Copy file from S3
-        run: aws s3 cp ${{secrets.APP_CONFIG_S3_PATH_STG}} .env
+        run: | 
+          ls  
+          aws s3 cp ${{secrets.APP_CONFIG_S3_PATH_STG}} .env
+          ls
 
       - name: Build Docker Image
         run: ./.github/scripts/build_and_publish_image.sh ${{env.ECR_REGISTRY}}
