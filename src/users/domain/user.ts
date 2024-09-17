@@ -6,6 +6,7 @@ import {
   IsDate,
   IsEmail,
   IsEnum,
+  IsJSON,
   IsNumber,
   IsOptional,
   IsString,
@@ -16,6 +17,7 @@ import { FileEntity } from '../../files/infrastructure/persistence/relational/en
 import { AuthProvidersEnum } from '../../auth/auth-providers.enum';
 import { RoleEnum } from '../../roles/roles.enum';
 import { TransactionEntity } from '../infrastructure/persistence/relational/entities/transactions.entity';
+import { KycUpdates } from '../kyc/kyc.enum';
 
 const idType = Number;
 export class User {
@@ -184,53 +186,15 @@ export class User {
   @IsString()
   signatureImagePath: string;
 
-  @ApiProperty({ type: Number })
-  @IsNumber()
-  kycCompletionPercentage: number;
+  @ApiProperty()
+  @IsJSON()
+  kycCompletionStatus: { [key in KycUpdates]: boolean };
 
-  @ApiProperty({ type: Boolean })
-  @IsBoolean()
-  passportPhotographVerificationInitiated: boolean;
-
-  @ApiProperty({ type: Boolean })
-  @IsBoolean()
-  signatureUploaded:boolean
-
-  @ApiProperty({ type: Boolean })
-  @IsBoolean()
-  PEPupdated: boolean;
 
   @ApiProperty({ type: Boolean })
   @IsBoolean()
   zanibarAccountCreated: boolean;
 
-  @ApiProperty({ type: Boolean })
-  @IsBoolean()
-  employmentDetailsProvided: boolean;
-
-  @ApiProperty({ type: Boolean })
-  @IsBoolean()
-  nextOfKinDetailsProvided: boolean;
-
-  @ApiProperty({ type: Boolean })
-  @IsBoolean()
-  userRegisteredAndVerified: boolean;
-
-  @ApiProperty({ type: Boolean })
-  @IsBoolean()
-  bankDetailsProvided: boolean;
-
-  @ApiProperty({ type: Boolean })
-  @IsBoolean()
-  addressProofProvided: boolean;
-
-  @ApiProperty({ type: Boolean })
-  @IsBoolean()
-  governmentIdProvided: boolean;
-
-  @ApiProperty({ type: Boolean })
-  @IsBoolean()
-  taxDetailsProvided: boolean;
 
   @ApiProperty({ type: Boolean })
   @IsBoolean()

@@ -290,11 +290,10 @@ export class AuthService {
   private async updateUserAfterConfirmation(user: User): Promise<void> {
     user.status = StatusEnum.ACTIVE;
     user.isVerified = true;
-    user.userRegisteredAndVerified = true;
-    user.kycCompletionPercentage = Math.min(
-      user.kycCompletionPercentage + 10,
-      100,
-    );
+    user.kycCompletionStatus = {
+      ...user.kycCompletionStatus,
+      userRegisteredAndVerified: true,
+    };
     await this.usersService.update(user.id, user);
   }
 
