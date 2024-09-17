@@ -20,6 +20,7 @@ import { SessionService } from '../session/session.service';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '../users/users.service';
 import { WalletEntity } from '../users/infrastructure/persistence/relational/entities/wallet.entity';
+import { ResponseService } from '../utils/services/response.service';
 
 @Module({
   imports: [
@@ -30,7 +31,7 @@ import { WalletEntity } from '../users/infrastructure/persistence/relational/ent
     TypeOrmModule.forFeature([UserEntity,NotificationsEntity,AuthOtpEntity,WalletEntity])
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtRefreshStrategy, UserService,AnonymousStrategy,NotificationsService,Mailer,SessionService,JwtService],
+  providers: [AuthService, JwtStrategy, JwtRefreshStrategy, UserService,AnonymousStrategy,NotificationsService,Mailer,SessionService,JwtService,ResponseService],
   exports: [AuthService],
 })
 export class AuthModule {}

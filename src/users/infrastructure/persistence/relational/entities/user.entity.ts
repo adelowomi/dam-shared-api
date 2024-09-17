@@ -27,6 +27,7 @@ import { RoleEnum } from '../../../../../roles/roles.enum';
 import { TransactionEntity } from './transactions.entity';
 import { CardEntity } from './card.entity';
 import { WalletEntity } from './wallet.entity';
+import { KycUpdates } from '../../../../kyc/kyc.enum';
 
 @Entity({
   name: 'user',
@@ -237,65 +238,19 @@ export class UserEntity extends EntityRelationalHelper {
   @Column({ type: String, nullable: true })
   addressProofPath: string;
 
-  @ApiProperty()
-  @Index()
-  @Column({ type: 'boolean', default: false })
-  passportPhotographVerificationInitiated: boolean;
+
 
   @ApiProperty()
   @Index()
-  @Column({ type: 'boolean', default: false })
-  PEPupdated: boolean;
-
-  @ApiProperty()
-  @Index()
-  @Column({ type: 'decimal',nullable:true })
-  kycCompletionPercentage: number;
+  @Column("jsonb", { nullable: false, default: '{}' })
+  kycCompletionStatus: { [key in KycUpdates]: boolean };
 
   @ApiProperty()
   @Index()
   @Column({ type: 'boolean', default: false })
   zanibarAccountCreated: boolean;
 
-  @ApiProperty()
-  @Index()
-  @Column({ type: 'boolean', default: false })
-  employmentDetailsProvided: boolean;
 
-  @ApiProperty()
-  @Index()
-  @Column({ type: 'boolean', default: false })
-  nextOfKinDetailsProvided: boolean;
-
-  @ApiProperty()
-  @Index()
-  @Column({ type: 'boolean', default: false })
-  userRegisteredAndVerified: boolean;
-
-  @ApiProperty()
-  @Index()
-  @Column({ type: 'boolean', default: false })
-  bankDetailsProvided: boolean;
-
-  @ApiProperty()
-  @Index()
-  @Column({ type: 'boolean', default: false })
-  addressProofProvided: boolean;
-
-  @ApiProperty()
-  @Index()
-  @Column({ type: 'boolean', default: false })
-  governmentIdProvided: boolean;
-
-  @ApiProperty()
-  @Index()
-  @Column({ type: 'boolean', default: false })
-  taxDetailsProvided: boolean;
-
-  @ApiProperty()
-  @Index()
-  @Column({ type: 'boolean', default: false })
-  signatureUploaded: boolean;
 
   @ApiProperty()
   @Index()
