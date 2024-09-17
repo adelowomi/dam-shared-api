@@ -184,12 +184,12 @@ export class WalletService {
       }
 
       // Validate bank account
-      const isValidBankAccount =
-        await this.bankAccountValidationService.verifyBankAccount(dto.accountNumber,dto.bankName)
-        ;
-      if (!isValidBankAccount) {
-        throw new BadRequestException('Invalid bank account details');
-      }
+      // const isValidBankAccount =
+      //   await this.bankAccountValidationService.verifyBankAccount(dto.accountNumber,dto.bankName)
+      //   ;
+      // if (!isValidBankAccount) {
+      //   throw new BadRequestException('Invalid bank account details');
+      // }
 
       // Process withdrawal through payment gateway
       const withdrawalResult =

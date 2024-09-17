@@ -151,25 +151,58 @@ export class SmileService {
   }
 
  
-
-  async verifyBankAccount(
-    bankName: string,
+  async performBankVerification(
+    userId: string,
     accountNumber: string,
+    bankCode:string
+   
   ): Promise<any> {
+    const jobId = uuidv4();
+    const partnerParams = {
+      user_id: userId,
+      job_id: jobId,
+      job_type: 5, // 5 is for ID verification without selfie
+    };
+
+    const idInfo = {
+      country: 'NG', // Assuming Nigeria, adjust if needed
+      id_type: 'BANK_ACCOUNT',
+      id_number: accountNumber,
+      bank_code :bankCode
+     
+    };
+    console.log('🚀 ~ SmileService ~ performIdVerification ~ idInfo:', idInfo);
+
+    const options = {
+      return_job_status: true,
+      return_history: false,
+      return_image_links: false,
+    };
+
+    this.logger.debug(
+      `Initiating ID verification for user ${userId} with ID type ${idInfo.id_type}`,
+    );
+    this.logger.debug('idInfo:', idInfo);
+
+    if (!idInfo.id_type || !idInfo.id_number) {
+      throw new Error('ID type and ID number are required for verification');
+    }
+
     try {
-      const response = await axios.post(
-        `${this.apiUrl}/bank_account_verification`,
-        { bank_name: bankName, account_number: accountNumber },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.apiKey}`,
-          },
-        },
+      const response = await this.idApi.submit_job(
+        partnerParams,
+        idInfo,
+        options,
       );
-      return response.data;
+      this.logger.debug(
+        `ID verification response for user ${userId}:`,
+        response,
+      );
+      return response;
     } catch (error) {
-      throw new Error(`Bank account verification failed: ${error.message}`);
+      console.log('🚀 ~ SmileService ~ performIdVerification ~ error:', error);
+      this.logger.error(`ID verification failed for user ${userId}:`, error);
+      throw new Error(`ID verification failed: ${error.message}`);
     }
   }
 

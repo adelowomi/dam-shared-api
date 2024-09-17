@@ -21,13 +21,34 @@ import { WalletService } from './wallet/wallet.service';
 import { WalletController } from './wallet/wallet.controller';
 import { Mailer } from '../mail/mail.service';
 import { FilesS3PresignedService } from '../files/infrastructure/uploader/s3-presigned/files.service';
+import { ResponseService } from '../utils/services/response.service';
 
 //const infrastructurePersistenceModule = RelationalUserPersistenceModule;
 
 @Module({
-  imports: [ FilesModule,TypeOrmModule.forFeature([UserEntity,AuthOtpEntity,NotificationsEntity,WalletEntity])],
-  controllers: [UsersController,KycController,WalletController],
-  providers: [UserService,NotificationsService,ZanzibarService,SmileService,KycService,FilesS3Service,FilesS3PresignedService,PaymentGatewayService,WalletService,Mailer],
+  imports: [
+    FilesModule,
+    TypeOrmModule.forFeature([
+      UserEntity,
+      AuthOtpEntity,
+      NotificationsEntity,
+      WalletEntity,
+    ]),
+  ],
+  controllers: [UsersController, KycController, WalletController],
+  providers: [
+    UserService,
+    NotificationsService,
+    ZanzibarService,
+    SmileService,
+    KycService,
+    FilesS3Service,
+    FilesS3PresignedService,
+    PaymentGatewayService,
+    WalletService,
+    Mailer,
+    ResponseService,
+  ],
   exports: [UserService],
 })
 export class UsersModule {}

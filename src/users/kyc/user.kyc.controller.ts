@@ -15,7 +15,13 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { KycService } from './user.kyc.service';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiCreatedResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../../roles/roles.guard';
 import { UserEntity } from '../infrastructure/persistence/relational/entities/user.entity';
@@ -41,58 +47,61 @@ export class KycController {
 
   @Post('initiatiate-nationalId-verification')
   @HttpCode(HttpStatus.OK)
-  async initiatePassportPhotographVerification(@Req() req,@Body()dto:NigerianIdDto) {
-    return await this.kycService.identifyID(
-      req.user,
-      dto
-    );
+  async initiatePassportPhotographVerification(
+    @Req() req,
+    @Body() dto: NigerianIdDto,
+  ) {
+    return await this.kycService.identifyID(req.user, dto);
   }
 
   @Patch('proof-of-life-verification')
   @HttpCode(HttpStatus.OK)
   async initiateSelfieVerification(@Body() body: any, @Req() req) {
     const { images, partner_params } = body;
-  
+
     if (!images || images.length === 0) {
       throw new BadRequestException('No images provided.');
     }
-  
+
     // Check if partner_params exists and has libraryVersion
     const libraryVersion = partner_params?.libraryVersion || 'default_version';
-  
+
     if (!libraryVersion) {
       throw new BadRequestException('Library version is required.');
     }
-  
+
     try {
-      const result = await this.kycService.submitSelfieJob(req.user, images, libraryVersion);
+      const result = await this.kycService.submitSelfieJob(
+        req.user,
+        images,
+        libraryVersion,
+      );
       return result;
     } catch (error) {
       console.error('Failed to submit selfie for verification:', error);
-      throw new InternalServerErrorException('Failed to submit selfie for KYC verification');
+      throw new InternalServerErrorException(
+        'Failed to submit selfie for KYC verification',
+      );
     }
   }
 
   @ApiConsumes('multipart/form-data')
-@ApiBody({
-  schema: {
-    type: 'object',
-    properties: {
-      signature: {
-        type: 'string',
-        format: 'binary',
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        signature: {
+          type: 'string',
+          format: 'binary',
+        },
       },
     },
-  },
-})
+  })
   @ApiCreatedResponse({ type: User })
   @UseInterceptors(FileInterceptor('signature'))
   @Patch('upload-signature')
   @HttpCode(HttpStatus.OK)
-  async uploadSignature(
-    @Req() req,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
+  async uploadSignature(@Req() req, @UploadedFile() file: Express.Multer.File) {
     return await this.kycService.confirmSignatureUpload(req.user, file);
   }
 
@@ -110,8 +119,6 @@ export class KycController {
     return await this.kycService.updateEmploymentDetails(req.user, dto);
   }
 
-
-
   @ApiCreatedResponse({ type: User })
   @Patch('update-bank-details')
   @HttpCode(HttpStatus.OK)
@@ -125,8 +132,6 @@ export class KycController {
   async updateNextOfkin(@Req() req, @Body() dto: NextOfKinDto) {
     return await this.kycService.updateNextOfkin(req.user, dto);
   }
-
-
 
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -148,9 +153,8 @@ export class KycController {
     @Req() req,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return await this.kycService.uploadAddressProof(req.user, file, );
+    return await this.kycService.uploadAddressProof(req.user, file);
   }
-
 
   @ApiCreatedResponse({ type: User })
   @Patch('update-tax-details')
@@ -159,12 +163,11 @@ export class KycController {
     return await this.kycService.updateTaxDetails(req.user, dto);
   }
 
-
   //@ApiCreatedResponse({ type: User })
-//   @Get('kyc-progress')
-//   @HttpCode(HttpStatus.OK)
-//   async getkycProgress(@Req() req) {
-//     return await this.kycService.getKycProgress(req.user);
-//   }
-// }
+  //   @Get('kyc-progress')
+  //   @HttpCode(HttpStatus.OK)
+  //   async getkycProgress(@Req() req) {
+  //     return await this.kycService.getKycProgress(req.user);
+  //   }
+  // }
 }

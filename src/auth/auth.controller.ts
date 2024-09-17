@@ -42,7 +42,7 @@ export class AuthController {
   @ApiOkResponse({
     type: LoginResponseDto,
   })
-  @HttpCode(HttpStatus.OK)
+
   public login(@Body() loginDto: AuthEmailLoginDto): Promise<LoginResponseDto> {
     return this.service.validateLogin(loginDto);
   }
@@ -52,6 +52,7 @@ export class AuthController {
     return this.service.register(createUserDto);
   }
 
+ 
   @Post('confirm-email')
   async confirmEmail(
     @Body() confirmEmailDto: AuthConfirmEmailDto,
@@ -59,12 +60,14 @@ export class AuthController {
     return this.service.confirmEmail(confirmEmailDto);
   }
 
+ 
   @Post('resend-otp')
   async resendOtpAfterRegistration(
     @Body() dto: AuthresendOtpDto,
   ) {
     return this.service.resendOtpAfterRegistration(dto);
   }
+
 
   @Post('resend-expired-otp')
   async resendExpiredOtp(
@@ -85,6 +88,7 @@ export class AuthController {
 
 
 
+  
   @Post('reset-password')
   resetPassword(@Body() resetPasswordDto: AuthResetPasswordDto){
     return this.service.resetPassword(resetPasswordDto);
