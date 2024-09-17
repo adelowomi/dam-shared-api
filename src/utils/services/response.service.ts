@@ -44,7 +44,6 @@ export class ResponseService {
     return this.error(message, HttpStatus.INTERNAL_SERVER_ERROR, error);
   }
 }
-
 export type StandardResponse<T> = {
   success: boolean;
   message: string;
