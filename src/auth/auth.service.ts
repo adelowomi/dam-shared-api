@@ -72,13 +72,27 @@ export class AuthService {
         return this.responseService.Response(
           false,
           'invalid credential',
-          HttpStatus.UNPROCESSABLE_ENTITY,
-          { user},
+          HttpStatus.NOT_FOUND,
+          {},
         );
       }
 
-      this.validateUserForLogin(user);
-      await this.comparePassword(loginDto.password, user.password);
+      const comparepass = await this.comaprePassword(loginDto.password, user.password);
+       if (!comparepass)
+        return this.responseService.Response(
+          false,
+          'invalid credential',
+          HttpStatus.NOT_FOUND,
+          {}
+        );
+     
+        if (!user.isVerified)
+          return this.responseService.Response(
+            false,
+            'account not verified yet',
+            HttpStatus.NOT_ACCEPTABLE,
+            {},
+          );
 
       const session = await this.createSession(user);
       const tokens = await this.getTokensData({
@@ -101,56 +115,10 @@ export class AuthService {
     }
   }
 
-
-
-   private validateUserForLogin(user: User): void {
-    if (user.provider !== AuthProvidersEnum.email) {
-      this.logger.warn(`Login failed: User ${user.id} needs to login via provider: ${user.provider}`);
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: { email: `needLoginViaProvider:${user.provider}` },
-      });
-    }
-
-    if (!user.isVerified) {
-      this.logger.warn(`Login failed: User ${user.id} is not verified`);
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: { email: 'userNotVerified' },
-      });
-    }
+  private async comaprePassword(userpassword, dbpassword): Promise<boolean> {
+    return await bcrypt.compare(userpassword, dbpassword);
   }
 
-
-  private async comparePassword(
-    userPassword,
-    dbPassword,
-  ): Promise<boolean | any> {
-    try {
-      const isMatch = await bcrypt.compare(userPassword, dbPassword);
-      if (!isMatch) {
-        this.logger.warn('Login failed: Password mismatch');
-        
-      }
-      return this.responseService.Response(
-        true,
-        'passowrd match',
-        HttpStatus.OK,
-        { isMatch },
-      );
-    } catch (error) {
-      this.logger.error(
-        `Password comparison failed: ${error.message}`,
-        error.stack,
-      );
-      return this.responseService.Response(
-        false,
-        'something went wrong',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        { error: error },
-      );
-    }
-  }
 
   private async createSession(user: User) {
     try {
@@ -174,6 +142,20 @@ export class AuthService {
       this.logger.log(
         `Attempting to register new user with email: ${dto.email}`,
       );
+
+      const existingUser = await this.usersRepository.findOne({
+        where: { email:dto.email },
+      });
+      if (existingUser) {
+        return this.responseService.Response(
+          false,
+          'email already exists',
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          {},
+        );
+      }
+
+
       const age = this.calculateAge(dto.DOB);
       if (age < 18) {
         this.logger.warn(
@@ -186,8 +168,6 @@ export class AuthService {
           {},
         );
       }
-
-      await this.checkExistingEmail(dto.email);
 
       const password = await this.hashPassword(dto.password);
       const user = await this.createUser({ ...dto, age, password });
@@ -248,19 +228,6 @@ export class AuthService {
     return age;
   }
 
-  private async checkExistingEmail(email: string): Promise<any> {
-    const existingUser = await this.usersRepository.findOne({
-      where: { email },
-    });
-    if (existingUser) {
-      return this.responseService.Response(
-        false,
-        'email already exists',
-        HttpStatus.UNPROCESSABLE_ENTITY,
-        {},
-      );
-    }
-  }
 
   private async hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, await bcrypt.genSalt());
@@ -276,15 +243,47 @@ export class AuthService {
     return this.usersRepository.save(this.usersRepository.create(userPayload));
   }
 
-  async confirmEmail(dto: AuthConfirmEmailDto): Promise<void> {
+  async confirmEmail(dto: AuthConfirmEmailDto): Promise<any> {
     try {
-      const otpRecord = await this.verifyOtp(dto.otp);
-      const user = await this.getUserForEmailConfirmation(otpRecord.email);
+      const findotp = await this.authOtpRepository.findOne({ where: { otp: dto.otp } });
+      if (!findotp)
+        return this.responseService.Response(
+          false,
+          'incorrect otp provided',
+          HttpStatus.NOT_FOUND,
+          {},
+        );
 
-      await this.updateUserAfterConfirmation(user);
-      await this.markOtpAsVerified(otpRecord);
+      //find if the otp is expired
+      if (findotp.expiration_time <= new Date())
+        return this.responseService.Response(false, 'OTP is expired', HttpStatus.BAD_REQUEST,{});
+
+      // Find the admin associated with the OTP
+      const user = await this.usersRepository.findOne({
+        where: { email: findotp.email },
+      });
+      if (!user)
+        return this.responseService.Response(
+          false,
+          'no user is associated with this otp',
+          HttpStatus.NOT_FOUND,
+          {},
+        );
+
+      // Verify and update the customer's status
+      user.isVerified = true;
+      user.status = StatusEnum.ACTIVE;
+      user.kycCompletionStatus = {
+        ...user.kycCompletionStatus,
+        userRegisteredAndVerified: true,
+      };
+      await this.usersRepository.save(user);
+
+      findotp.verified = true;
+      await this.authOtpRepository.save(findotp);
+    
+
       await this.mailService.WelcomeMail(user.email, user.firstName);
-      await this.createVerificationNotification(user);
 
       // Create a wallet for the user
       await this.walletRepository.save(
@@ -294,78 +293,35 @@ export class AuthService {
           owner: user,
         }),
       );
+
+      await this.notificationsService.create({
+        message: `Hi ${user.firstName}, your account has been verified successfully.`,
+        subject: 'Account Verification',
+        account: user.id,
+      });
+
+      return this.responseService.Response(
+        true,
+        'user successfully verified',
+        HttpStatus.OK,
+        { user },
+      );
     } catch (error) {
       this.logger.error(
         `Something went wrong during email confirmation`,
         error.stack,
       );
-      throw error;
-    }
-  }
-
-  private async verifyOtp(otp: string): Promise<any> {
-    const otpRecord = await this.authOtpRepository.findOne({
-      where: { otp: otp },
-    });
-    if (!otpRecord) {
       return this.responseService.Response(
         false,
-        'otp not found',
-        HttpStatus.NOT_FOUND,
-        {},
+        'something went wrong',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { error:error },
       );
     }
-
-    const currentTime = new Date();
-    if (otpRecord.expiration_time < currentTime) {
-      return this.responseService.Response(
-        false,
-        'otp is Expired',
-        HttpStatus.BAD_REQUEST,
-        {},
-      );
-    }
-
-    return otpRecord;
   }
 
-  private async getUserForEmailConfirmation(email: string): Promise<any> {
-    const user = await this.usersRepository.findOne({
-      where: { email: email },
-    });
-    if (!user) {
-      return this.responseService.Response(
-        false,
-        'email not found',
-        HttpStatus.NOT_FOUND,
-        {},
-      );
-    }
-    return user;
-  }
+ 
 
-  private async updateUserAfterConfirmation(user: User): Promise<void> {
-    user.status = StatusEnum.ACTIVE;
-    user.isVerified = true;
-    user.kycCompletionStatus = {
-      ...user.kycCompletionStatus,
-      userRegisteredAndVerified: true,
-    };
-    await this.usersService.update(user.id, user);
-  }
-
-  private async markOtpAsVerified(otpRecord: AuthOtpEntity): Promise<void> {
-    otpRecord.verified = true;
-    await this.authOtpRepository.save(otpRecord);
-  }
-
-  private async createVerificationNotification(user: User): Promise<void> {
-    await this.notificationsService.create({
-      message: `Hi ${user.firstName}, your account has been verified successfully.`,
-      subject: 'Account Verification',
-      account: user.id,
-    });
-  }
 
   async resendOtpAfterRegistration(dto: AuthresendOtpDto): Promise<any> {
     try {
@@ -373,7 +329,7 @@ export class AuthService {
         where: { email: dto.email },
       });
 
-      const user = await this.usersService.findByEmail(dto.email);
+      
 
       if (!existingOtp) {
         return this.responseService.Response(
@@ -394,6 +350,17 @@ export class AuthService {
         );
       }
 
+      const user = await this.usersRepository.findOne({
+        where: { email: dto.email },
+      });
+      if (!user)
+        return this.responseService.Response(
+          false,
+          'no user is associated with this otp',
+          HttpStatus.NOT_FOUND,
+          {},
+        );
+
       // Generate new OTP
       const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -411,6 +378,12 @@ export class AuthService {
 
       // Send new OTP via email
       await this.mailService.SendVerificationeMail(dto.email, newOtp);
+
+      await this.notificationsService.create({
+        message: `Hi ${user.firstName}, otp resent after two minutes.`,
+        subject: 'OTP resent After two Minutes',
+        account: user.id,
+      });
       return this.responseService.Response(
         true,
         'new otp sent ',
@@ -447,6 +420,18 @@ export class AuthService {
         );
       }
 
+
+      const user = await this.usersRepository.findOne({
+        where: { email: dto.email },
+      });
+      if (!user)
+        return this.responseService.Response(
+          false,
+          'no user is associated with this otp',
+          HttpStatus.NOT_FOUND,
+          {},
+        );
+
       // Generate new OTP
       const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -464,6 +449,12 @@ export class AuthService {
       // Send new OTP via email
       await this.mailService.SendVerificationeMail(dto.email, newOtp);
 
+      await this.notificationsService.create({
+        message: `Hi ${user.firstName}, otp resent after expiring.`,
+        subject: 'Expired OTP resent',
+        account: user.id,
+      });
+
       return this.responseService.Response(
         true,
         'new otp sent',
@@ -477,23 +468,20 @@ export class AuthService {
 
   async forgotPassword(dto: AuthForgotPasswordDto): Promise<any> {
     try {
-      const user = await this.usersService.findByEmail(dto.email);
-
-      if (!user) {
+      const user = await this.usersRepository.findOne({
+        where: { email: dto.email },
+      });
+      if (!user)
         return this.responseService.Response(
           false,
-          'email not found',
-          HttpStatus.BAD_REQUEST,
+          'No user associated with email found',
+          HttpStatus.NOT_FOUND,
           {},
         );
-      }
 
-      const tokenExpiresIn = this.configService.getOrThrow(
-        'auth.forgotExpires',
-        {
-          infer: true,
-        },
-      );
+      const tokenExpiresIn = this.configService.getOrThrow('auth.forgotExpires', {
+        infer: true,
+      });
 
       const tokenExpires = Date.now() + ms(tokenExpiresIn);
 
@@ -509,16 +497,25 @@ export class AuthService {
         },
       );
 
+      // Store the hash and expiration time in the user table
+      user.resetPasswordHash = hash;
+      user.resetPasswordExpires = new Date(tokenExpires);
+      await this.usersRepository.save(user);
+
+      const frontendResetUrl = process.env.FRONTEND_RESET_URL;
+      const resetLink = `${frontendResetUrl}?hash=${hash}&email=${user.email}`;
+
       await this.mailService.SendPasswordResetLinkMail(
         dto.email,
-        hash,
+        resetLink,
         user.firstName,
       );
+
       return this.responseService.Response(
         true,
-        'password reset link sent',
+        'Password reset link sent',
         HttpStatus.OK,
-        { user },
+        {},
       );
     } catch (error) {
       throw error;
@@ -527,71 +524,71 @@ export class AuthService {
 
   async resetPassword(dto: AuthResetPasswordDto): Promise<any> {
     try {
-      const user = await this.usersService.findByEmail(dto.email);
-      try {
-        const jwtData = await this.jwtService.verifyAsync<{
-          forgotUserId: User['id'];
-        }>(dto.hash, {
-          secret: this.configService.getOrThrow('auth.forgotSecret', {
-            infer: true,
-          }),
-        });
-
-        //user = jwtData.forgotUserId;
-      } catch {
+      const user = await this.usersRepository.findOne({
+        where: { email: dto.email },
+      });
+      if (!user)
         return this.responseService.Response(
           false,
-          'invalid hash',
+          'No user associated with email found',
           HttpStatus.NOT_FOUND,
+          {},
+        );
+
+      // Verify the hash
+      if (user.resetPasswordHash !== dto.hash) {
+        return this.responseService.Response(
+          false,
+          'Invalid reset token',
+          HttpStatus.BAD_REQUEST,
           {},
         );
       }
 
-      //const user = await this.usersService.findById(userId);
-
-      if (!user) {
+      // Check if the token has expired
+      if (user.resetPasswordExpires < new Date()) {
         return this.responseService.Response(
           false,
-          'user not found',
-          HttpStatus.NOT_FOUND,
+          'Reset token has expired',
+          HttpStatus.BAD_REQUEST,
           {},
         );
       }
 
-      // Hash the password before saving the user
-      const hashedPassword = dto.password
-        ? await bcrypt.hash(dto.password, await bcrypt.genSalt())
-        : undefined;
+      // Hash the new password
+      const hashedPassword = await bcrypt.hash(dto.password, await bcrypt.genSalt());
 
+      // Update user's password and clear reset token fields
       user.password = hashedPassword;
+      user.resetPasswordHash = '';
+      //user.resetPasswordExpires = null;
 
+      await this.usersRepository.update(user.id, user);
+
+      // Delete all sessions for this user
       await this.sessionService.deleteByUserId({
         userId: user.id,
       });
 
-      await this.usersService.update(user.id, user);
-
+      // Create a notification for the user
       await this.notificationsService.create({
-        message: ` ${user.firstName}, you have  successfully performed a password reset.`,
+        message: `${user.firstName}, you have successfully reset your password.`,
         subject: 'Password Reset',
         account: user.id,
       });
 
-      this.logger.log(`User successfully Reset Password: ${user.id}`);
-
       return this.responseService.Response(
         true,
-        'password reset successfully',
+        'Password reset successfully',
         HttpStatus.OK,
-        { user },
+        {},
       );
     } catch (error) {
-      this.logger.error(`Reset Password failed: ${error.message}`, error.stack);
       return this.responseService.Response(
         false,
-        'something went wrong',
+        'Something went wrong',
         HttpStatus.INTERNAL_SERVER_ERROR,
-        { error: error },
+        { error: error.message },
       );
     }
   }
@@ -690,7 +687,7 @@ export class AuthService {
       );
     }
 
-    const isValidOldPassword = await this.comparePassword(
+    const isValidOldPassword = await this.comaprePassword(
       userDto.oldPassword,
       currentUser.password,
     );

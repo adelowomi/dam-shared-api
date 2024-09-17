@@ -285,6 +285,17 @@ export class UserEntity extends EntityRelationalHelper {
   @OneToMany(() => WalletEntity, wallet => wallet.owner)
   my_wallet: WalletEntity;
 
+
+
+
+  @ApiProperty()
+  @Column({ nullable:true})
+  resetPasswordHash:string
+
+  @ApiProperty()
+  @Column({ type: 'timestamp' , nullable:true})
+  resetPasswordExpires:Date 
+
 }
 
 // adelowo ajibola
