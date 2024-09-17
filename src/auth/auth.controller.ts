@@ -22,10 +22,12 @@ import { AuthUpdateDto } from './dto/auth-update.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthRegisterDto } from './dto/auth-register-login.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
-import { NullableType } from '../utils/types/nullable.type';
 import { User } from '../users/domain/user';
 import { RefreshResponseDto } from './dto/refresh-response.dto';
 import { AuthresendOtpDto } from './dto/resendOtp.dto';
+import { StandardResponse } from '../utils/services/response.service';
+import { UserEntity } from '../users/infrastructure/persistence/relational/entities/user.entity';
+import { AuthOtpEntity } from '../users/infrastructure/persistence/relational/entities/authOtp.entity';
 
 @ApiTags('Auth')
 @Controller({
@@ -42,59 +44,53 @@ export class AuthController {
   @ApiOkResponse({
     type: LoginResponseDto,
   })
-
-  public login(@Body() loginDto: AuthEmailLoginDto): Promise<LoginResponseDto> {
+  public login(
+    @Body() loginDto: AuthEmailLoginDto,
+  ): Promise<StandardResponse<LoginResponseDto>> {
     return this.service.validateLogin(loginDto);
   }
 
   @Post('register')
-  async register(@Body() createUserDto: AuthRegisterDto) {
+  async register(
+    @Body() createUserDto: AuthRegisterDto,
+  ): Promise<StandardResponse<UserEntity>> {
     return this.service.register(createUserDto);
   }
 
- 
   @Post('confirm-email')
   async confirmEmail(
     @Body() confirmEmailDto: AuthConfirmEmailDto,
-  ) {
+  ): Promise<StandardResponse<UserEntity>> {
     return this.service.confirmEmail(confirmEmailDto);
   }
 
- 
   @Post('resend-otp')
   async resendOtpAfterRegistration(
     @Body() dto: AuthresendOtpDto,
-  ) {
+  ): Promise<StandardResponse<UserEntity>> {
     return this.service.resendOtpAfterRegistration(dto);
   }
-
 
   @Post('resend-expired-otp')
   async resendExpiredOtp(
     @Body() dto: AuthresendOtpDto,
-  ) {
+  ): Promise<StandardResponse<AuthOtpEntity>> {
     return this.service.resendExpiredOtp(dto);
   }
-
-
-
 
   @Post('forgot-password')
   async forgotPassword(
     @Body() forgotPasswordDto: AuthForgotPasswordDto,
-  ) {
+  ): Promise<StandardResponse<any>> {
     return this.service.forgotPassword(forgotPasswordDto);
   }
 
-
-
-  
   @Post('reset-password')
-  resetPassword(@Body() resetPasswordDto: AuthResetPasswordDto){
+  resetPassword(
+    @Body() resetPasswordDto: AuthResetPasswordDto,
+  ): Promise<StandardResponse<boolean>> {
     return this.service.resetPassword(resetPasswordDto);
   }
-
-  
 
   @ApiBearerAuth()
   @SerializeOptions({ groups: ['me'] })
@@ -102,7 +98,7 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   @ApiOkResponse({ type: User })
   @HttpCode(HttpStatus.OK)
-  public me(@Req() request) {
+  public me(@Req() request): Promise<StandardResponse<UserEntity>> {
     return this.service.me(request.user);
   }
 
@@ -112,7 +108,9 @@ export class AuthController {
   @Post('refresh')
   @UseGuards(AuthGuard('jwt-refresh'))
   @HttpCode(HttpStatus.OK)
-  public refresh(@Request() request): Promise<RefreshResponseDto> {
+  public refresh(
+    @Request() request,
+  ): Promise<StandardResponse<RefreshResponseDto>> {
     return this.service.refreshToken({
       sessionId: request.user.sessionId,
       hash: request.user.hash,
@@ -123,8 +121,8 @@ export class AuthController {
   @Post('logout')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
-  public async logout(@Request() request) {
-    await this.service.logout({ sessionId: request.user.sessionId });
+  public async logout(@Request() request): Promise<StandardResponse<boolean>> {
+    return await this.service.logout({ sessionId: request.user.sessionId });
   }
 
   @ApiBearerAuth()
@@ -136,7 +134,7 @@ export class AuthController {
   public update(
     @Request() request,
     @Body() userDto: AuthUpdateDto,
-  ) {
+  ): Promise<StandardResponse<User>> {
     return this.service.update(request.user, userDto);
   }
 
@@ -144,7 +142,7 @@ export class AuthController {
   @Delete('me')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
-  public async delete(@Request() request) {
+  public async delete(@Request() request): Promise<StandardResponse<boolean>> {
     return this.service.softDelete(request.user);
   }
 }
