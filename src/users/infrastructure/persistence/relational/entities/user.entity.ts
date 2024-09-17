@@ -148,6 +148,11 @@ export class UserEntity extends EntityRelationalHelper {
   @Column({ type: String, nullable: true })
   accountNumber: string;
 
+  @ApiProperty({ type: Boolean})
+  @Index()
+  @Column({type:'boolean', nullable: true , default:false})
+  bankVerified:boolean
+
   @ApiProperty({ type: String })
   @Index()
   @Column({ type: String, nullable: true })

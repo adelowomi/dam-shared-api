@@ -352,20 +352,18 @@ export class KycService {
     bankDetails: BankDetailsDto,
   ): Promise<any> {
     try {
-      const isValid = await this.smileService.verifyBankAccount(
-        bankDetails.bankName,
+      const isValid = await this.smileService.performBankVerification(
+        user.id.toString(),
         bankDetails.accountNumber,
+        bankDetails.bankcode,
       );
 
       if (!isValid) {
         throw new UnprocessableEntityException('Invalid account number');
       }
 
-      Object.assign(user, {
-        bankName: bankDetails.bankName,
-        accountNumber: bankDetails.accountNumber,
-      });
-
+      user.accountNumber = bankDetails.accountNumber;
+      user.bankVerified = true;
       user.updatedAt = new Date();
       await this.updateKycStatus(user, KycUpdates.bankDetailsProvided);
 
