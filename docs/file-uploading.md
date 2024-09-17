@@ -26,6 +26,7 @@ Out-of-box boilerplate supports the following drivers: `local`, `s3`, and `s3-pr
 
 ---
 
+
 ## Uploading and attach file flow for `local` driver
 
 Endpoint `/api/v1/files/upload` is used for uploading files, which returns `File` entity with `id` and `path`. After receiving `File` entity you can attach this to another entity.
