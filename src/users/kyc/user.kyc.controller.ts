@@ -34,6 +34,7 @@ import { User } from '../domain/user';
 import { NigerianIdDto } from '../dto/nigerianid.dto';
 import { NextOfKinDto } from '../dto/next-of-kin.dto';
 import { TaxDetailsDto } from '../dto/tax-details.dto';
+import { StandardResponse } from '../../utils/services/response.service';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
@@ -46,7 +47,6 @@ export class KycController {
   constructor(private readonly kycService: KycService) {}
 
   @Post('initiatiate-nationalId-verification')
-  @HttpCode(HttpStatus.OK)
   async initiatePassportPhotographVerification(
     @Req() req,
     @Body() dto: NigerianIdDto,
@@ -55,7 +55,6 @@ export class KycController {
   }
 
   @Patch('proof-of-life-verification')
-  @HttpCode(HttpStatus.OK)
   async initiateSelfieVerification(@Body() body: any, @Req() req) {
     const { images, partner_params } = body;
 
@@ -85,6 +84,8 @@ export class KycController {
     }
   }
 
+
+
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -97,39 +98,34 @@ export class KycController {
       },
     },
   })
-  @ApiCreatedResponse({ type: User })
+ 
   @UseInterceptors(FileInterceptor('signature'))
   @Patch('upload-signature')
-  @HttpCode(HttpStatus.OK)
-  async uploadSignature(@Req() req, @UploadedFile() file: Express.Multer.File) {
+  async uploadSignature(@Req() req, @UploadedFile() file: Express.Multer.File):Promise<StandardResponse<UserEntity>> {
     return await this.kycService.confirmSignatureUpload(req.user, file);
   }
 
-  @ApiCreatedResponse({ type: User })
+  
   @Patch('update-pep-details')
-  @HttpCode(HttpStatus.OK)
-  async updatePepDetails(@Req() req, @Body() dto: PepDto) {
+  async updatePepDetails(@Req() req, @Body() dto: PepDto):Promise<StandardResponse<UserEntity>> {
     return await this.kycService.updatePepDetails(req.user, dto);
   }
 
-  @ApiCreatedResponse({ type: User })
+
   @Patch('update-employment-details')
-  @HttpCode(HttpStatus.OK)
-  async updateEmploymentDetails(@Req() req, @Body() dto: EmploymentDetailsDto) {
+  async updateEmploymentDetails(@Req() req, @Body() dto: EmploymentDetailsDto) :Promise<StandardResponse<UserEntity>>{
     return await this.kycService.updateEmploymentDetails(req.user, dto);
   }
 
-  @ApiCreatedResponse({ type: User })
+  
   @Patch('update-bank-details')
-  @HttpCode(HttpStatus.OK)
-  async updateBankDetails(@Req() req, @Body() dto: BankDetailsDto) {
+  async updateBankDetails(@Req() req, @Body() dto: BankDetailsDto):Promise<StandardResponse<UserEntity>> {
     return await this.kycService.updateBankDetails(req.user, dto);
   }
 
-  @ApiCreatedResponse({ type: User })
+
   @Patch('update-nextOfkin-details')
-  @HttpCode(HttpStatus.OK)
-  async updateNextOfkin(@Req() req, @Body() dto: NextOfKinDto) {
+  async updateNextOfkin(@Req() req, @Body() dto: NextOfKinDto):Promise<StandardResponse<UserEntity>> {
     return await this.kycService.updateNextOfkin(req.user, dto);
   }
 
@@ -145,29 +141,26 @@ export class KycController {
       },
     },
   })
-  @ApiCreatedResponse({ type: User })
+ 
   @UseInterceptors(FileInterceptor('addressProof'))
   @Patch('upload-proof-of-address')
-  @HttpCode(HttpStatus.OK)
   async uploadAddressProof(
     @Req() req,
     @UploadedFile() file: Express.Multer.File,
-  ) {
+  ) :Promise<StandardResponse<UserEntity>>{
     return await this.kycService.uploadAddressProof(req.user, file);
   }
 
-  @ApiCreatedResponse({ type: User })
+  
   @Patch('update-tax-details')
-  @HttpCode(HttpStatus.OK)
-  async updateTaxDetails(@Req() req, @Body() dto: TaxDetailsDto) {
+  async updateTaxDetails(@Req() req, @Body() dto: TaxDetailsDto) :Promise<StandardResponse<UserEntity>>{
     return await this.kycService.updateTaxDetails(req.user, dto);
   }
 
-  //@ApiCreatedResponse({ type: User })
-  //   @Get('kyc-progress')
-  //   @HttpCode(HttpStatus.OK)
-  //   async getkycProgress(@Req() req) {
-  //     return await this.kycService.getKycProgress(req.user);
-  //   }
-  // }
-}
+ 
+    @Get('kyc-progress')
+    async getkycProgress(@Req() req) :Promise<StandardResponse<number>>{
+      return await this.kycService.getKycProgress(req.user);
+    }
+  }
+

@@ -19,6 +19,7 @@ import { PaymentGatewayService } from '../../payment/payment.service';
 import { SmileService } from '../../utils/services/smileID.service';
 import { CardDetailsDto, WalletFundingDto, WalletWithdrawalDto } from '../dto/wallet.dto';
 import { NotificationsService } from '../../notifications/notifications.service';
+import { ResponseService, StandardResponse } from '../../utils/services/response.service';
 
 @Injectable()
 export class WalletService {
@@ -27,13 +28,14 @@ export class WalletService {
     private paymentGatewayService: PaymentGatewayService,
     private emailService: Mailer,
     private bankAccountValidationService: SmileService,
-    private notificationService:NotificationsService
+    private notificationService:NotificationsService,
+    private responseService: ResponseService,
   ) {}
 
   async fundAccount(
     user: UserEntity,
     dto:WalletFundingDto
-  ): Promise<WalletEntity> {
+  ): Promise<StandardResponse<WalletEntity>> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -43,7 +45,7 @@ export class WalletService {
         where: { owner: user },
       });
       if (!wallet) {
-        throw new NotFoundException('Wallet not found');
+        return this.responseService.notFound('Wallet not found');
       }
 
       // Process payment through payment gateway
@@ -52,7 +54,7 @@ export class WalletService {
        
       );
       if (!paymentResult.success) {
-        throw new BadRequestException('Payment failed');
+        return this.responseService.badRequest('Payment failed');
       }
 
       // Update wallet balance
@@ -79,16 +81,16 @@ export class WalletService {
       // Send confirmation email
       await this.emailService.sendFundingConfirmation(user.email, dto.amount);
 
-      return wallet;
+      return this.responseService.success('wallet funded',wallet);
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw error;
+      return this.responseService.internalServerError('Error funding wallet',error);
     } finally {
       await queryRunner.release();
     }
   }
 
-  async addCard(user: UserEntity, carddto:CardDetailsDto): Promise<CardEntity> {
+  async addCard(user: UserEntity, carddto:CardDetailsDto): Promise<StandardResponse<CardEntity>> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -121,16 +123,16 @@ export class WalletService {
       // Notify user
       await this.emailService.sendCardAddedNotification(user.email,card.cardType,card.last4Digits,card.expiryMonth,card.expiryYear);
 
-      return card;
+      return this.responseService.success('card added successfully',card);
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw error;
+      return this.responseService.internalServerError('Error in adding card',error);
     } finally {
       await queryRunner.release();
     }
   }
 
-  async removeCard(user: UserEntity, cardId: number): Promise<void> {
+  async removeCard(user: UserEntity, cardId: number): Promise<StandardResponse<boolean>> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -140,7 +142,7 @@ export class WalletService {
         where: { id: cardId, user: { id: user.id } },
       });
       if (!card) {
-        throw new NotFoundException('Card not found');
+        return this.responseService.notFound('Card not found');
       }
 
       await queryRunner.manager.remove(card);
@@ -155,9 +157,10 @@ export class WalletService {
 
       // Notify user
       await this.emailService.sendCardRemovedNotification(user.email,card.cardType,card.last4Digits);
+      return this.responseService.success('wallet deleted successfully',true)
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw error;
+      return this.responseService.internalServerError('Error removing card',error);
     } finally {
       await queryRunner.release();
     }
@@ -166,7 +169,7 @@ export class WalletService {
   async withdraw(
     user: UserEntity,
     dto:WalletWithdrawalDto,
-  ): Promise<WalletEntity> {
+  ): Promise<StandardResponse<WalletEntity>> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -176,11 +179,11 @@ export class WalletService {
         where: { owner: { id: user.id } },
       });
       if (!wallet) {
-        throw new NotFoundException('Wallet not found');
+        return this.responseService.notFound('Wallet not found');
       }
 
       if (wallet.balance < dto.amount) {
-        throw new BadRequestException('Insufficient funds');
+        return this.responseService.badRequest('Insufficient funds');
       }
 
       // Validate bank account
@@ -226,28 +229,31 @@ export class WalletService {
       // Send confirmation email
       await this.emailService.sendWithdrawalConfirmation(user.email, dto.amount);
 
-      return wallet;
+      return this.responseService.success('funds withdrawal succesful',wallet);
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      throw error;
+      return this.responseService.internalServerError('Error withdrawing from wallet',error);
     } finally {
       await queryRunner.release();
     }
   }
 
-  async getWalletBalance(user: UserEntity): Promise<number> {
+  async getWalletBalance(user: UserEntity): Promise<StandardResponse<number>> {
     const wallet = await this.dataSource
       .getRepository(WalletEntity)
       .findOne({ where: { owner: { id: user.id } } });
     if (!wallet) {
-      throw new NotFoundException('Wallet not found');
+      return this.responseService.notFound('Wallet not found');
     }
-    return wallet.balance;
+    const balance = wallet.balance;
+    return this.responseService.success('wallet balance fetched successfully',balance)
   }
 
-  async getSavedCards(user: UserEntity): Promise<CardEntity[]> {
-    return this.dataSource
+  async getSavedCards(user: UserEntity): Promise<StandardResponse<CardEntity[]>> {
+    const cards= await this.dataSource
       .getRepository(CardEntity)
       .find({ where: { user: { id: user.id } } });
+
+      return this.responseService.success('saved cards fetched',cards)
   }
 }

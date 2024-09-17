@@ -4,6 +4,9 @@ import { WalletService } from "./wallet.service";
 import { AuthGuard } from "@nestjs/passport";
 import { RolesGuard } from "../../roles/roles.guard";
 import { CardDetailsDto, WalletFundingDto, WalletWithdrawalDto } from "../dto/wallet.dto";
+import { StandardResponse } from "../../utils/services/response.service";
+import { CardEntity } from "../infrastructure/persistence/relational/entities/card.entity";
+import { WalletEntity } from "../infrastructure/persistence/relational/entities/wallet.entity";
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -13,43 +16,37 @@ export class WalletController{
     constructor(private readonly walletservice:WalletService){}
 
     @Post('fund-account')
-    @HttpCode(HttpStatus.OK)
-    async fundAccount(@Body()dto:WalletFundingDto,@Req()req){
+    async fundAccount(@Body()dto:WalletFundingDto,@Req()req):Promise<StandardResponse<WalletEntity>>{
         return await this.walletservice.fundAccount(req.user,dto)
         
     }
 
     @Post('withdraw-funds')
-    @HttpCode(HttpStatus.OK)
-    async withdraw(@Body()dto:WalletWithdrawalDto,@Req()req){
+    async withdraw(@Body()dto:WalletWithdrawalDto,@Req()req):Promise<StandardResponse<WalletEntity>>{
         return await this.walletservice.withdraw(req.user,dto)
         
     }
 
     @Post('add-card')
-    @HttpCode(HttpStatus.OK)
-    async addCard(@Body()dto:CardDetailsDto,@Req()req){
+    async addCard(@Body()dto:CardDetailsDto,@Req()req):Promise<StandardResponse<CardEntity>>{
         return await this.walletservice.addCard(req.user,dto)
         
     }
 
     @Delete('remove-card/:cardID')
-    @HttpCode(HttpStatus.NO_CONTENT)
-    async removeCard(@Req()req,@Param('cardID')cardID:number){
+    async removeCard(@Req()req,@Param('cardID')cardID:number):Promise<StandardResponse<boolean>>{
         return await this.walletservice.removeCard(req.user,cardID)
         
     }
 
     @Get('fetch-wallet-balance')
-    @HttpCode(HttpStatus.OK)
-    async getWalletBalance(@Req()req){
+    async getWalletBalance(@Req()req):Promise<StandardResponse<number>>{
         return await this.walletservice.getWalletBalance(req.user)
         
     }
 
     @Get('get-saved-cards')
-    @HttpCode(HttpStatus.OK)
-    async getSavedCards(@Req()req){
+    async getSavedCards(@Req()req):Promise<StandardResponse<CardEntity[]>>{
         return await this.walletservice.getSavedCards(req.user)
         
     }

@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import * as smileIdentityCore from 'smile-identity-core';
+import { ResponseService } from './response.service';
 
 @Injectable()
 export class SmileService {
@@ -13,7 +14,7 @@ export class SmileService {
   private readonly idApi: any;
   private readonly webApi: any;
 
-  constructor() {
+  constructor(private responseService: ResponseService,) {
     if (!process.env.SMILE_API_URL) {
       throw new Error(
         'SMILE_API_URL is not defined in the environment variables',
@@ -110,11 +111,11 @@ export class SmileService {
         `ID verification response for user ${userId}:`,
         response,
       );
-      return response;
+      return this.responseService.success('ID verification successful',response)
     } catch (error) {
       console.log('🚀 ~ SmileService ~ performIdVerification ~ error:', error);
       this.logger.error(`ID verification failed for user ${userId}:`, error);
-      throw new Error(`ID verification failed: ${error.message}`);
+      return this.responseService.internalServerError(`ID verification failed`, error.message);
     }
   }
 
@@ -138,10 +139,10 @@ export class SmileService {
         {},
         options,
       );
-      return result;
+      return this.responseService.success('smart selfie job successful',result);
     } catch (error) {
       console.error('Selfie job submission failed:', error);
-      throw new Error(`Selfie job submission failed: ${error.message}`);
+      return this.responseService.internalServerError(`Selfie job submission failed`, error.message);
     }
   }
 
@@ -198,11 +199,11 @@ export class SmileService {
         `ID verification response for user ${userId}:`,
         response,
       );
-      return response;
+      return this.responseService.success('ID verification ',response);
     } catch (error) {
       console.log('🚀 ~ SmileService ~ performIdVerification ~ error:', error);
       this.logger.error(`ID verification failed for user ${userId}:`, error);
-      throw new Error(`ID verification failed: ${error.message}`);
+      return this.responseService.internalServerError(`ID verification failed`,error.message);
     }
   }
 
