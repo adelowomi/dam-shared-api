@@ -42,10 +42,10 @@ import { AuthForgotPasswordDto } from './dto/auth-forgot-password.dto';
 import { AuthResetPasswordDto } from './dto/auth-reset-password.dto';
 import { Mailer } from '../mail/mail.service';
 import { WalletEntity } from '../users/infrastructure/persistence/relational/entities/wallet.entity';
+import { ResponseService } from '../utils/services/response.service';
 
 @Injectable()
 export class AuthService {
-
   private readonly logger = new Logger(AuthService.name);
   constructor(
     private jwtService: JwtService,
@@ -54,24 +54,27 @@ export class AuthService {
     @InjectRepository(AuthOtpEntity)
     private readonly authOtpRepository: Repository<AuthOtpEntity>,
     @InjectRepository(WalletEntity)
-    private readonly walletRepository:Repository<WalletEntity>,
+    private readonly walletRepository: Repository<WalletEntity>,
     private usersService: UserService,
     private sessionService: SessionService,
     private mailService: Mailer,
-    private  notificationsService: NotificationsService,
+    private notificationsService: NotificationsService,
     private configService: ConfigService,
+    private responseService: ResponseService,
   ) {}
 
-  async validateLogin(loginDto: AuthEmailLoginDto): Promise<LoginResponseDto> {
+  async validateLogin(loginDto: AuthEmailLoginDto): Promise<any> {
     try {
       this.logger.log(`Attempting to validate login for email: ${loginDto.email}`);
       const user = await this.usersRepository.findOne({where:{email:loginDto.email}});
       if (!user) {
         this.logger.warn(`Login failed: User not found for email: ${loginDto.email}`);
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: { email: 'notFound' },
-        });
+        return this.responseService.Response(
+          false,
+          'invalid credential',
+          HttpStatus.UNPROCESSABLE_ENTITY,
+          { user},
+        );
       }
 
       this.validateUserForLogin(user);
@@ -86,7 +89,12 @@ export class AuthService {
       });
 
       this.logger.log(`Login successful for user: ${user.id}`);
-      return { ...tokens, user };
+      return this.responseService.Response(
+        true,
+        'login successful',
+        HttpStatus.OK,
+        {...tokens, user},
+      );
     } catch (error) {
       this.logger.error(`Login failed: ${error.message}`, error.stack);
       throw error;
@@ -114,22 +122,35 @@ export class AuthService {
   }
 
 
-
-
-  private async comparePassword(userPassword, dbPassword): Promise<boolean> {
+  private async comparePassword(
+    userPassword,
+    dbPassword,
+  ): Promise<boolean | any> {
     try {
       const isMatch = await bcrypt.compare(userPassword, dbPassword);
       if (!isMatch) {
         this.logger.warn('Login failed: Password mismatch');
+        
       }
-      return isMatch;
+      return this.responseService.Response(
+        true,
+        'passowrd match',
+        HttpStatus.OK,
+        { isMatch },
+      );
     } catch (error) {
-      this.logger.error(`Password comparison failed: ${error.message}`, error.stack);
-      throw new InternalServerErrorException('Error during password comparison');
+      this.logger.error(
+        `Password comparison failed: ${error.message}`,
+        error.stack,
+      );
+      return this.responseService.Response(
+        false,
+        'something went wrong',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { error: error },
+      );
     }
   }
-
-
 
   private async createSession(user: User) {
     try {
@@ -145,16 +166,25 @@ export class AuthService {
       throw new InternalServerErrorException('Error creating session');
     }
   }
-  async register(dto: AuthRegisterDto): Promise<{ user: UserEntity }> {
+
+
+
+  async register(dto: AuthRegisterDto): Promise<any> {
     try {
-      this.logger.log(`Attempting to register new user with email: ${dto.email}`);
+      this.logger.log(
+        `Attempting to register new user with email: ${dto.email}`,
+      );
       const age = this.calculateAge(dto.DOB);
       if (age < 18) {
-        this.logger.warn(`Registration failed: User age (${age}) is below approved age`);
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          error: { age: 'ageBelowApprovedAge' },
-        });
+        this.logger.warn(
+          `Registration failed: User age (${age}) is below approved age`,
+        );
+        return this.responseService.Response(
+          false,
+          'age is below approved age, you must be 18 and above',
+          HttpStatus.NOT_ACCEPTABLE,
+          {},
+        );
       }
 
       await this.checkExistingEmail(dto.email);
@@ -187,10 +217,20 @@ export class AuthService {
       });
 
       this.logger.log(`User successfully registered: ${user.id}`);
-      return { user };
+      return this.responseService.Response(
+        true,
+        'user successfully registered',
+        HttpStatus.CREATED,
+        { user },
+      );
     } catch (error) {
       this.logger.error(`Registration failed: ${error.message}`, error.stack);
-      throw error;
+      return this.responseService.Response(
+        false,
+        'something went wrong',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { error: error },
+      );
     }
   }
 
@@ -208,13 +248,17 @@ export class AuthService {
     return age;
   }
 
-  private async checkExistingEmail(email: string): Promise<void> {
-    const existingUser = await this.usersRepository.findOne({ where: { email } });
+  private async checkExistingEmail(email: string): Promise<any> {
+    const existingUser = await this.usersRepository.findOne({
+      where: { email },
+    });
     if (existingUser) {
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: { email: 'emailAlreadyExists' },
-      });
+      return this.responseService.Response(
+        false,
+        'email already exists',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+        {},
+      );
     }
   }
 
@@ -243,46 +287,59 @@ export class AuthService {
       await this.createVerificationNotification(user);
 
       // Create a wallet for the user
-      await this.walletRepository.save(this.walletRepository.create({
-        balance: 0,
-        createdAt: new Date(),
-        owner: user
-      }));
+      await this.walletRepository.save(
+        this.walletRepository.create({
+          balance: 0,
+          createdAt: new Date(),
+          owner: user,
+        }),
+      );
     } catch (error) {
-      this.logger.error(`Something went wrong during email confirmation`, error.stack);
+      this.logger.error(
+        `Something went wrong during email confirmation`,
+        error.stack,
+      );
       throw error;
     }
   }
 
-  private async verifyOtp(otp: string): Promise<AuthOtpEntity> {
+  private async verifyOtp(otp: string): Promise<any> {
     const otpRecord = await this.authOtpRepository.findOne({
-      where: { otp:otp },
+      where: { otp: otp },
     });
     if (!otpRecord) {
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: { otp: 'invalidOtp' },
-      });
+      return this.responseService.Response(
+        false,
+        'otp not found',
+        HttpStatus.NOT_FOUND,
+        {},
+      );
     }
 
     const currentTime = new Date();
     if (otpRecord.expiration_time < currentTime) {
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: { otp: 'otpExpired' },
-      });
+      return this.responseService.Response(
+        false,
+        'otp is Expired',
+        HttpStatus.BAD_REQUEST,
+        {},
+      );
     }
 
     return otpRecord;
   }
 
-  private async getUserForEmailConfirmation(email: string): Promise<UserEntity> {
-    const user = await this.usersRepository.findOne({where:{email:email}});
-    if (!user ) {
-      throw new NotFoundException({
-        status: HttpStatus.NOT_FOUND,
-        error: 'notFound',
-      });
+  private async getUserForEmailConfirmation(email: string): Promise<any> {
+    const user = await this.usersRepository.findOne({
+      where: { email: email },
+    });
+    if (!user) {
+      return this.responseService.Response(
+        false,
+        'email not found',
+        HttpStatus.NOT_FOUND,
+        {},
+      );
     }
     return user;
   }
@@ -310,54 +367,59 @@ export class AuthService {
     });
   }
 
-
-
-
   async resendOtpAfterRegistration(dto: AuthresendOtpDto): Promise<any> {
-   try {
-     const existingOtp = await this.authOtpRepository.findOne({
-       where: { email: dto.email },
-     });
- 
-     const user = await this.usersService.findByEmail(dto.email);
- 
-     if (!existingOtp) {
-       throw new UnprocessableEntityException({
-         status: HttpStatus.UNPROCESSABLE_ENTITY,
-         error: 'No OTP found for this email',
-       });
-     }
- 
-     const now = new Date();
-     if (now < existingOtp.resend_time) {
-       throw new UnprocessableEntityException({
-         status: HttpStatus.UNPROCESSABLE_ENTITY,
-         error: 'Please wait before requesting a new OTP',
-       });
-     }
- 
-     // Generate new OTP
-     const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
- 
-     // Update timestamps
-     const oneminutelater = new Date(now.getTime() + 1 * 60000);
-     const tenminuteslater = new Date(now.getTime() + 10 * 60000);
- 
-     // Update OTP record
-     await this.authOtpRepository.update(existingOtp.id, {
-       otp: newOtp,
-       verified: false,
-       expiration_time: tenminuteslater,
-       resend_time: oneminutelater,
-     });
- 
-     // Send new OTP via email
-     await this.mailService.SendVerificationeMail(dto.email, newOtp);
-     return {message:'new otp sent successfully'}
-   } catch (error) {
-    throw error
-    
-   }
+    try {
+      const existingOtp = await this.authOtpRepository.findOne({
+        where: { email: dto.email },
+      });
+
+      const user = await this.usersService.findByEmail(dto.email);
+
+      if (!existingOtp) {
+        return this.responseService.Response(
+          false,
+          'no existing found for this user',
+          HttpStatus.NOT_FOUND,
+          {},
+        );
+      }
+
+      const now = new Date();
+      if (now < existingOtp.resend_time) {
+        return this.responseService.Response(
+          false,
+          'please wait before requesting a new otp',
+          HttpStatus.BAD_REQUEST,
+          {},
+        );
+      }
+
+      // Generate new OTP
+      const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+
+      // Update timestamps
+      const oneminutelater = new Date(now.getTime() + 1 * 60000);
+      const tenminuteslater = new Date(now.getTime() + 10 * 60000);
+
+      // Update OTP record
+      await this.authOtpRepository.update(existingOtp.id, {
+        otp: newOtp,
+        verified: false,
+        expiration_time: tenminuteslater,
+        resend_time: oneminutelater,
+      });
+
+      // Send new OTP via email
+      await this.mailService.SendVerificationeMail(dto.email, newOtp);
+      return this.responseService.Response(
+        true,
+        'new otp sent ',
+        HttpStatus.OK,
+        { user },
+      );
+    } catch (error) {
+      throw error;
+    }
   }
 
   async resendExpiredOtp(dto: AuthresendOtpDto): Promise<any> {
@@ -365,28 +427,32 @@ export class AuthService {
       const existingOtp = await this.authOtpRepository.findOne({
         where: { email: dto.email },
       });
-  
+
       if (!existingOtp) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          error: 'No OTP found for this email',
-        });
+        return this.responseService.Response(
+          false,
+          'no existing otp found or this user',
+          HttpStatus.NOT_FOUND,
+          {},
+        );
       }
-  
+
       const now = new Date();
       if (now < existingOtp.expiration_time) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          error: 'Current OTP has not expired yet',
-        });
+        return this.responseService.Response(
+          false,
+          'current otp has not expired yet',
+          HttpStatus.BAD_REQUEST,
+          {},
+        );
       }
-  
+
       // Generate new OTP
       const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-  
+
       // Update timestamps
       const tenminuteslater = new Date(now.getTime() + 10 * 60000);
-  
+
       // Update OTP record
       await this.authOtpRepository.update(existingOtp.id, {
         otp: newOtp,
@@ -394,38 +460,43 @@ export class AuthService {
         expiration_time: tenminuteslater,
         resend_time: now, // Reset resend_time to now
       });
-  
+
       // Send new OTP via email
       await this.mailService.SendVerificationeMail(dto.email, newOtp);
 
-      return {message:'new otp sent successfully'}
+      return this.responseService.Response(
+        true,
+        'new otp sent',
+        HttpStatus.OK,
+        { existingOtp },
+      );
     } catch (error) {
-      throw error
-      
+      throw error;
     }
   }
 
-
-
   async forgotPassword(dto: AuthForgotPasswordDto): Promise<any> {
-try {
+    try {
       const user = await this.usersService.findByEmail(dto.email);
-  
+
       if (!user) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            email: 'emailNotExists',
-          },
-        });
+        return this.responseService.Response(
+          false,
+          'email not found',
+          HttpStatus.BAD_REQUEST,
+          {},
+        );
       }
-  
-      const tokenExpiresIn = this.configService.getOrThrow('auth.forgotExpires', {
-        infer: true,
-      });
-  
+
+      const tokenExpiresIn = this.configService.getOrThrow(
+        'auth.forgotExpires',
+        {
+          infer: true,
+        },
+      );
+
       const tokenExpires = Date.now() + ms(tokenExpiresIn);
-  
+
       const hash = await this.jwtService.signAsync(
         {
           forgotUserId: user.id,
@@ -437,103 +508,123 @@ try {
           expiresIn: tokenExpiresIn,
         },
       );
-  
+
       await this.mailService.SendPasswordResetLinkMail(
         dto.email,
         hash,
         user.firstName,
-  
       );
-      return {messge:'password reset link sent successfully'}
-} catch (error) {
-  throw error 
-  
-}
-
-  }
-
-  async resetPassword(dto: AuthResetPasswordDto): Promise<any> {
-   try {
-     const user = await this.usersService.findByEmail(dto.email);
-     try {
-       const jwtData = await this.jwtService.verifyAsync<{
-         forgotUserId: User['id'];
-       }>(dto.hash, {
-         secret: this.configService.getOrThrow('auth.forgotSecret', {
-           infer: true,
-         }),
-       });
- 
-       //user = jwtData.forgotUserId;
-     } catch {
-      
-       throw new UnprocessableEntityException({
-         status: HttpStatus.UNPROCESSABLE_ENTITY,
-         errors: {
-           hash: `invalidHash`,
-         },
-       });
-     }
- 
-     //const user = await this.usersService.findById(userId);
- 
-     if (!user) {
-       throw new UnprocessableEntityException({
-         status: HttpStatus.UNPROCESSABLE_ENTITY,
-         errors: {
-           hash: `notFound`,
-         },
-       });
-     }
- 
-     // Hash the password before saving the user
-     const hashedPassword = dto.password
-       ? await bcrypt.hash(dto.password, await bcrypt.genSalt())
-       : undefined;
- 
-     user.password = hashedPassword;
- 
-     await this.sessionService.deleteByUserId({
-       userId: user.id,
-     });
- 
-     await this.usersService.update(user.id, user);
-
-
-     await this.notificationsService.create({
-      message: ` ${user.firstName}, you have  successfully performed a password reset.`,
-      subject: 'Password Reset',
-      account: user.id,
-    });
-    
-
-    this.logger.log(`User successfully Reset Password: ${user.id}`);
-
-    return {message:'password reset successful'}
-
-   } catch (error) {
-    this.logger.error(`Reset Password failed: ${error.message}`, error.stack);
-    throw error;
-    
-   }
-  }
-
-   async me(user:UserEntity) {
-    try {
-      this.logger.log(`Fetching user data for user: ${user.id}`);
-      const userProfile = await this.usersRepository.findOne({where:{id:user.id},relations:['my_cards','my_transactions','my_wallet']});
-      if (!user) throw new UnprocessableEntityException({
-        error:'userNotFound',
-        status:HttpStatus.UNPROCESSABLE_ENTITY
-      })
-      return userProfile
+      return this.responseService.Response(
+        true,
+        'password reset link sent',
+        HttpStatus.OK,
+        { user },
+      );
     } catch (error) {
-      this.logger.error(`Error fetching user data: ${error.message}`, error.stack);
-      throw new InternalServerErrorException('Error fetching user data');
+      throw error;
     }
   }
 
+  async resetPassword(dto: AuthResetPasswordDto): Promise<any> {
+    try {
+      const user = await this.usersService.findByEmail(dto.email);
+      try {
+        const jwtData = await this.jwtService.verifyAsync<{
+          forgotUserId: User['id'];
+        }>(dto.hash, {
+          secret: this.configService.getOrThrow('auth.forgotSecret', {
+            infer: true,
+          }),
+        });
 
+        //user = jwtData.forgotUserId;
+      } catch {
+        return this.responseService.Response(
+          false,
+          'invalid hash',
+          HttpStatus.NOT_FOUND,
+          {},
+        );
+      }
+
+      //const user = await this.usersService.findById(userId);
+
+      if (!user) {
+        return this.responseService.Response(
+          false,
+          'user not found',
+          HttpStatus.NOT_FOUND,
+          {},
+        );
+      }
+
+      // Hash the password before saving the user
+      const hashedPassword = dto.password
+        ? await bcrypt.hash(dto.password, await bcrypt.genSalt())
+        : undefined;
+
+      user.password = hashedPassword;
+
+      await this.sessionService.deleteByUserId({
+        userId: user.id,
+      });
+
+      await this.usersService.update(user.id, user);
+
+      await this.notificationsService.create({
+        message: ` ${user.firstName}, you have  successfully performed a password reset.`,
+        subject: 'Password Reset',
+        account: user.id,
+      });
+
+      this.logger.log(`User successfully Reset Password: ${user.id}`);
+
+      return this.responseService.Response(
+        true,
+        'password reset successfully',
+        HttpStatus.OK,
+        { user },
+      );
+    } catch (error) {
+      this.logger.error(`Reset Password failed: ${error.message}`, error.stack);
+      return this.responseService.Response(
+        false,
+        'something went wrong',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { error: error },
+      );
+    }
+  }
+
+  async me(user: UserEntity) {
+    try {
+      this.logger.log(`Fetching user data for user: ${user.id}`);
+      const userProfile = await this.usersRepository.findOne({
+        where: { id: user.id },
+        relations: ['my_cards', 'my_transactions', 'my_wallet'],
+      });
+      if (!user)
+        return this.responseService.Response(
+          false,
+          'user not found',
+          HttpStatus.NOT_FOUND,
+          {},
+        );
+
+      return this.responseService.Response(
+        true,
+        'logged in user returned successfully',
+        HttpStatus.OK,
+        { user },
+      );
+    } catch (error) {
+      this.logger.error(
+        `Error fetching user data: ${error.message}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException('Error fetching user data');
+    }
+  }
 
   async update(
     userJwtPayload: JwtPayloadType,
@@ -543,11 +634,15 @@ try {
       this.logger.log(`Attempting to update user: ${userJwtPayload.id}`);
       const currentUser = await this.usersService.findById(userJwtPayload.id);
       if (!currentUser) {
-        this.logger.warn(`Update failed: User not found for id: ${userJwtPayload.id}`);
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: { user: 'userNotFound' },
-        });
+        this.logger.warn(
+          `Update failed: User not found for id: ${userJwtPayload.id}`,
+        );
+        return this.responseService.Response(
+          false,
+          'user not found',
+          HttpStatus.NOT_FOUND,
+          {},
+        );
       }
 
       if (userDto.password) {
@@ -562,11 +657,22 @@ try {
         delete userDto.oldPassword;
 
         await this.usersRepository.save(currentUser);
-        return this.usersService.findById(userJwtPayload.id);
+        const user = this.usersService.findById(userJwtPayload.id);
+        return this.responseService.Response(
+          true,
+          'user details updated successfully',
+          HttpStatus.OK,
+          { user },
+        );
       }
     } catch (error) {
       this.logger.error(`Update failed: ${error.message}`, error.stack);
-      throw error;
+      return this.responseService.Response(
+        false,
+        'something went wrong',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { error: error },
+      );
     }
   }
 
@@ -574,12 +680,14 @@ try {
     currentUser: User,
     userDto: AuthUpdateDto,
     userJwtPayload: JwtPayloadType,
-  ): Promise<void> {
+  ): Promise<any> {
     if (!userDto.oldPassword) {
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: { oldPassword: 'missingOldPassword' },
-      });
+      return this.responseService.Response(
+        false,
+        'missing old password',
+        HttpStatus.BAD_REQUEST,
+        {},
+      );
     }
 
     const isValidOldPassword = await this.comparePassword(
@@ -587,10 +695,12 @@ try {
       currentUser.password,
     );
     if (!isValidOldPassword) {
-      throw new UnprocessableEntityException({
-        status: HttpStatus.UNPROCESSABLE_ENTITY,
-        errors: { oldPassword: 'incorrectOldPassword' },
-      });
+      return this.responseService.Response(
+        false,
+        'incorrect old password provided',
+        HttpStatus.BAD_REQUEST,
+        {},
+      );
     }
 
     await this.sessionService.deleteByUserIdWithExclude({
@@ -599,23 +709,37 @@ try {
     });
   }
 
-
-
   async refreshToken(
     data: Pick<JwtRefreshPayloadType, 'sessionId' | 'hash'>,
-  ): Promise<Omit<LoginResponseDto, 'user'>> {
+  ): Promise<any> {
     try {
-      this.logger.log(`Attempting to refresh token for session: ${data.sessionId}`);
+      this.logger.log(
+        `Attempting to refresh token for session: ${data.sessionId}`,
+      );
       const session = await this.sessionService.findById(data.sessionId);
       if (!session || session.hash !== data.hash) {
-        this.logger.warn(`Token refresh failed: Invalid session or hash for session: ${data.sessionId}`);
-        throw new UnauthorizedException();
+        this.logger.warn(
+          `Token refresh failed: Invalid session or hash for session: ${data.sessionId}`,
+        );
+        return this.responseService.Response(
+          false,
+          'unauthorized',
+          HttpStatus.UNAUTHORIZED,
+          {},
+        );
       }
 
       const user = await this.usersService.findById(session.user.id);
       if (!user?.role) {
-        this.logger.warn(`Token refresh failed: User not found or no role for user: ${session.user.id}`);
-        throw new UnauthorizedException();
+        this.logger.warn(
+          `Token refresh failed: User not found or no role for user: ${session.user.id}`,
+        );
+        return this.responseService.Response(
+          false,
+          'user not found',
+          HttpStatus.UNAUTHORIZED,
+          {},
+        );
       }
 
       const hash = crypto
@@ -625,45 +749,70 @@ try {
       await this.sessionService.update(session.id, { hash });
 
       this.logger.log(`Token refreshed successfully for user: ${user.id}`);
-      return this.getTokensData({
-        id: session.user.id,
-        role: user.role,
-        sessionId: session.id,
-        hash,
-      });
+      return this.responseService.Response(
+        true,
+        'token refreshed successfully',
+        HttpStatus.BAD_REQUEST,
+        {
+          id: session.user.id,
+          role: user.role,
+          sessionId: session.id,
+          hash,
+        },
+      );
     } catch (error) {
       this.logger.error(`Token refresh failed: ${error.message}`, error.stack);
-      throw error;
+      return this.responseService.Response(
+        false,
+        'something went wrong',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { error: error },
+      );
     }
   }
 
-
-
-
-
-   async softDelete(user: User): Promise<void> {
+  async softDelete(user: User): Promise<any> {
     try {
       this.logger.log(`Soft deleting user: ${user.id}`);
       await this.usersService.remove(user.id);
+      return this.responseService.Response(
+        true,
+        'user deleted successfully',
+        HttpStatus.OK,
+        {},
+      );
     } catch (error) {
       this.logger.error(`Soft delete failed: ${error.message}`, error.stack);
-      throw new InternalServerErrorException('Error during soft delete');
+      return this.responseService.Response(
+        false,
+        'something went wrong',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { error: error },
+      );
     }
   }
 
-
-
-  async logout(data: Pick<JwtRefreshPayloadType, 'sessionId'>): Promise<void> {
+  async logout(data: Pick<JwtRefreshPayloadType, 'sessionId'>): Promise<any> {
     try {
       this.logger.log(`Logging out session: ${data.sessionId}`);
       await this.sessionService.deleteById(data.sessionId);
+      return this.responseService.Response(
+        true,
+        'logout successful',
+        HttpStatus.OK,
+        {},
+      );
     } catch (error) {
       this.logger.error(`Logout failed: ${error.message}`, error.stack);
-      throw new InternalServerErrorException('Error during logout');
+      return this.responseService.Response(
+        false,
+        'something went wrong',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        { error: error },
+      );
     }
   }
-
-   private async getTokensData(data: {
+private async getTokensData(data: {
     id: User['id'];
     role: User['role'];
     sessionId: Session['id'];
@@ -702,4 +851,3 @@ try {
     }
   }
 }
- 

@@ -48,13 +48,11 @@ export class AuthController {
   }
 
   @Post('register')
-  @HttpCode(HttpStatus.NO_CONTENT)
   async register(@Body() createUserDto: AuthRegisterDto) {
     return this.service.register(createUserDto);
   }
 
   @Post('confirm-email')
-  @HttpCode(HttpStatus.NO_CONTENT)
   async confirmEmail(
     @Body() confirmEmailDto: AuthConfirmEmailDto,
   ) {
@@ -62,7 +60,6 @@ export class AuthController {
   }
 
   @Post('resend-otp')
-  @HttpCode(HttpStatus.NO_CONTENT)
   async resendOtpAfterRegistration(
     @Body() dto: AuthresendOtpDto,
   ) {
@@ -70,7 +67,6 @@ export class AuthController {
   }
 
   @Post('resend-expired-otp')
-  @HttpCode(HttpStatus.NO_CONTENT)
   async resendExpiredOtp(
     @Body() dto: AuthresendOtpDto,
   ) {
@@ -81,7 +77,6 @@ export class AuthController {
 
 
   @Post('forgot-password')
-  @HttpCode(HttpStatus.NO_CONTENT)
   async forgotPassword(
     @Body() forgotPasswordDto: AuthForgotPasswordDto,
   ) {
@@ -91,7 +86,6 @@ export class AuthController {
 
 
   @Post('reset-password')
-  @HttpCode(HttpStatus.NO_CONTENT)
   resetPassword(@Body() resetPasswordDto: AuthResetPasswordDto){
     return this.service.resetPassword(resetPasswordDto);
   }
