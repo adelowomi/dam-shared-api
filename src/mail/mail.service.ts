@@ -57,9 +57,6 @@
 //     });
 // }
 
-
-
-
 //   async forgotPassword(
 //     mailData: MailData<{ hash: string; tokenExpires: number }>,
 //   ): Promise<void> {
@@ -164,15 +161,14 @@
 //     });
 //   }
 
-  
 //   async welcomeMail(mailData: MailData): Promise<void> {
 //     const i18n = I18nContext.current();
-    
+
 //     let welcomeTitle: MaybeType<string>;
 //     let welcomeText1: MaybeType<string>;
 //     let welcomeText2: MaybeType<string>;
 //     let welcomeText3: MaybeType<string>;
-  
+
 //     if (i18n) {
 //       [welcomeTitle, welcomeText1, welcomeText2, welcomeText3] = await Promise.all([
 //         i18n.t('common.welcomeTitle'),
@@ -181,7 +177,7 @@
 //         i18n.t('welcome-email.text3'),
 //       ]);
 //     }
-  
+
 //     // Send welcome email
 //     await this.mailerService.sendMail({
 //       to: mailData.to,
@@ -201,14 +197,12 @@
 //         text2: welcomeText2,
 //         text3: welcomeText3,
 //         actionTitle: 'Get Started',
-        
+
 //       },
 //     });
 //   }
-  
 
 // }
-
 
 //welcome
 
@@ -229,8 +223,7 @@ export class Mailer {
   async SendVerificationeMail(
     email: string,
     //name: string,
-    otpCode:string
-   
+    otpCode: string,
   ): Promise<void> {
     const subject = 'Email Verification Mail';
     const content = `<!DOCTYPE html>
@@ -320,9 +313,6 @@ export class Mailer {
     </html>`;
     await this.mailerservice.sendMail({ to: email, subject, html: content });
   }
-  
-
-
 
   async SendPasswordResetLinkMail(
     email: string,
@@ -403,7 +393,7 @@ export class Mailer {
             <p class="message">Hi ${name},</p>
             <div class="instructions">
               <p>It seems like you requested to reset your password. Please click the button below to proceed with resetting your password:</p>
-              <a href="${process.env.FRONTEND_URL}/reset-password?token=${resettoken}" class="reset-button">Reset Password</a>
+              <a href="${resettoken}" class="reset-button">Reset Password</a>
               <p>If you did not request this, please ignore this email.</p>
             </div>
             <div class="footer">
@@ -420,9 +410,6 @@ export class Mailer {
       </html>`;
     await this.mailerservice.sendMail({ to: email, subject, html: content });
   }
-  
-  
-
 
   async WelcomeMail(email: string, name: string): Promise<void> {
     const subject = 'Welcome To Ostra Logistics';
@@ -505,7 +492,6 @@ export class Mailer {
       </html>`;
     await this.mailerservice.sendMail({ to: email, subject, html: content });
   }
-
 
   async sendFundingConfirmation(email: string, amount: number): Promise<void> {
     const subject = 'Account Funding Confirmation';
@@ -593,9 +579,13 @@ export class Mailer {
     await this.mailerservice.sendMail({ to: email, subject, html: content });
   }
 
-
-
-  async sendCardAddedNotification(email: string, cardType:string,last4Digits:string,expiryMonth:string,expiryYear:string): Promise<void> {
+  async sendCardAddedNotification(
+    email: string,
+    cardType: string,
+    last4Digits: string,
+    expiryMonth: string,
+    expiryYear: string,
+  ): Promise<void> {
     const subject = 'New Card Added';
     const content = `<!DOCTYPE html>
 <html lang="en">
@@ -637,7 +627,11 @@ export class Mailer {
     await this.mailerservice.sendMail({ to: email, subject, html: content });
   }
 
-  async sendCardRemovedNotification(email: string, cardType:string, last4Digits:string): Promise<void> {
+  async sendCardRemovedNotification(
+    email: string,
+    cardType: string,
+    last4Digits: string,
+  ): Promise<void> {
     const subject = 'Card Removed';
     const content = `<!DOCTYPE html>
     <html lang="en">
@@ -678,7 +672,10 @@ export class Mailer {
     await this.mailerservice.sendMail({ to: email, subject, html: content });
   }
 
-  async sendWithdrawalConfirmation(email: string, amount: number): Promise<void> {
+  async sendWithdrawalConfirmation(
+    email: string,
+    amount: number,
+  ): Promise<void> {
     const subject = 'Withdrawal Confirmation';
     const content = `<!DOCTYPE html>
     <html lang="en">
@@ -712,7 +709,4 @@ export class Mailer {
     `;
     await this.mailerservice.sendMail({ to: email, subject, html: content });
   }
-
-  
-  
 }
