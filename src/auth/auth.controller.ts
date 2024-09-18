@@ -78,7 +78,19 @@ export class AuthController {
 
   @Post('register')
   @ApiOkResponse({
-    type: StandardResponse<UserEntity>,
+    // type: StandardResponse<LoginResponseDto>,
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(StandardResponse<LoginResponseDto>) },
+        {
+          properties: {
+            payload: {
+              $ref: getSchemaPath(UserEntity),
+            },
+          },
+        },
+      ],
+    },
   })
   async register(
     @Body() createUserDto: AuthRegisterDto,
@@ -88,7 +100,19 @@ export class AuthController {
 
   @Post('confirm-email')
   @ApiOkResponse({
-    type: StandardResponse<UserEntity>,
+    // type: StandardResponse<LoginResponseDto>,
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(StandardResponse<LoginResponseDto>) },
+        {
+          properties: {
+            payload: {
+              $ref: getSchemaPath(UserEntity),
+            },
+          },
+        },
+      ],
+    },
   })
   async confirmEmail(
     @Body() confirmEmailDto: AuthConfirmEmailDto,
@@ -98,7 +122,19 @@ export class AuthController {
 
   @Post('resend-otp')
   @ApiOkResponse({
-    type: StandardResponse<UserEntity>,
+    // type: StandardResponse<LoginResponseDto>,
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(StandardResponse<LoginResponseDto>) },
+        {
+          properties: {
+            payload: {
+              $ref: getSchemaPath(UserEntity),
+            },
+          },
+        },
+      ],
+    },
   })
   async resendOtpAfterRegistration(
     @Body() dto: AuthresendOtpDto,
@@ -108,7 +144,19 @@ export class AuthController {
 
   @Post('resend-expired-otp')
   @ApiOkResponse({
-    type: StandardResponse<AuthOtpEntity>,
+    // type: StandardResponse<LoginResponseDto>,
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(StandardResponse<LoginResponseDto>) },
+        {
+          properties: {
+            payload: {
+              $ref: getSchemaPath(UserEntity),
+            },
+          },
+        },
+      ],
+    },
   })
   async resendExpiredOtp(
     @Body() dto: AuthresendOtpDto,
@@ -118,7 +166,17 @@ export class AuthController {
 
   @Post('forgot-password')
   @ApiOkResponse({
-    type: StandardResponse<any>,
+    // type: StandardResponse<LoginResponseDto>,
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(StandardResponse<LoginResponseDto>) },
+        {
+          properties: {
+            payload: {},
+          },
+        },
+      ],
+    },
   })
   async forgotPassword(
     @Body() forgotPasswordDto: AuthForgotPasswordDto,
@@ -128,7 +186,19 @@ export class AuthController {
 
   @Post('reset-password')
   @ApiOkResponse({
-    type: StandardResponse<boolean>,
+    // type: StandardResponse<LoginResponseDto>,
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(StandardResponse<LoginResponseDto>) },
+        {
+          properties: {
+            payload: {
+              $ref: getSchemaPath(Boolean),
+            },
+          },
+        },
+      ],
+    },
   })
   resetPassword(
     @Body() resetPasswordDto: AuthResetPasswordDto,
@@ -140,14 +210,42 @@ export class AuthController {
   @SerializeOptions({ groups: ['me'] })
   @Get('me')
   @UseGuards(AuthGuard('jwt'))
-  @ApiOkResponse({ type: StandardResponse<UserEntity> })
+  @ApiOkResponse({
+    // type: StandardResponse<LoginResponseDto>,
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(StandardResponse<LoginResponseDto>) },
+        {
+          properties: {
+            payload: {
+              $ref: getSchemaPath(UserEntity),
+            },
+          },
+        },
+      ],
+    },
+  })
   @HttpCode(HttpStatus.OK)
   public me(@Req() request): Promise<StandardResponse<UserEntity>> {
     return this.service.me(request.user);
   }
 
   @ApiBearerAuth()
-  @ApiOkResponse({ type: StandardResponse<RefreshResponseDto> })
+  @ApiOkResponse({
+    // type: StandardResponse<LoginResponseDto>,
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(StandardResponse<LoginResponseDto>) },
+        {
+          properties: {
+            payload: {
+              $ref: getSchemaPath(RefreshResponseDto),
+            },
+          },
+        },
+      ],
+    },
+  })
   @SerializeOptions({ groups: ['me'] })
   @Post('refresh')
   @UseGuards(AuthGuard('jwt-refresh'))
@@ -162,7 +260,21 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
-  @ApiOkResponse({ type: StandardResponse<boolean> })
+  @ApiOkResponse({
+    // type: StandardResponse<LoginResponseDto>,
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(StandardResponse<LoginResponseDto>) },
+        {
+          properties: {
+            payload: {
+              $ref: getSchemaPath(Boolean),
+            },
+          },
+        },
+      ],
+    },
+  })
   @Post('logout')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -175,7 +287,21 @@ export class AuthController {
   @Patch('me')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: StandardResponse<User> })
+  @ApiOkResponse({
+    // type: StandardResponse<LoginResponseDto>,
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(StandardResponse<LoginResponseDto>) },
+        {
+          properties: {
+            payload: {
+              $ref: getSchemaPath(User),
+            },
+          },
+        },
+      ],
+    },
+  })
   public update(
     @Request() request,
     @Body() userDto: AuthUpdateDto,
@@ -186,7 +312,21 @@ export class AuthController {
   @ApiBearerAuth()
   @Delete('me')
   @UseGuards(AuthGuard('jwt'))
-  @ApiOkResponse({ type: StandardResponse<boolean> })
+  @ApiOkResponse({
+    // type: StandardResponse<LoginResponseDto>,
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(StandardResponse<LoginResponseDto>) },
+        {
+          properties: {
+            payload: {
+              $ref: getSchemaPath(Boolean),
+            },
+          },
+        },
+      ],
+    },
+  })
   @HttpCode(HttpStatus.NO_CONTENT)
   public async delete(@Request() request): Promise<StandardResponse<boolean>> {
     return this.service.softDelete(request.user);
