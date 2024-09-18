@@ -45,13 +45,25 @@ export class ResponseService {
   }
 }
 export class StandardResponse<T> {
+  public success: boolean;
+  public message: string;
+  public status: HttpStatus;
+  public payload?: T;
+  public errors?: any;
+
   constructor(
-    public success: boolean,
-    public message: string,
-    public status: HttpStatus,
-    public payload?: T,
-    public errors?: any,
-  ) {}
+    success: boolean,
+    message: string,
+    status: HttpStatus,
+    payload?: T,
+    errors?: any,
+  ) {
+    this.success = success;
+    this.message = message;
+    this.status = status;
+    this.payload = payload;
+    this.errors = errors;
+  }
 }
 
 // export function withStandardResponse<TBase extends new (...args: any[]) => {}>(
