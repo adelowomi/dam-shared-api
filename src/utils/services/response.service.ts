@@ -44,10 +44,22 @@ export class ResponseService {
     return this.error(message, HttpStatus.INTERNAL_SERVER_ERROR, error);
   }
 }
-export type StandardResponse<T> = {
-  success: boolean;
-  message: string;
-  payload?: T;
-  status: HttpStatus;
-  errors?: any;
-};
+export class StandardResponse<T> {
+  constructor(
+    public success: boolean,
+    public message: string,
+    public status: HttpStatus,
+    public payload?: T,
+    public errors?: any,
+  ) {}
+}
+
+// export function withStandardResponse<TBase extends new (...args: any[]) => {}>(
+//   Base: TBase,
+// ) {
+//   return class extends Base {
+//     responseService = new ResponseService();
+//   };
+// }
+
+// create a mixin to add the Standard Response to any class

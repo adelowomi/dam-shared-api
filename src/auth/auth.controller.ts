@@ -42,7 +42,7 @@ export class AuthController {
   })
   @Post('login')
   @ApiOkResponse({
-    type: Promise<StandardResponse<LoginResponseDto>>,
+    type: StandardResponse<LoginResponseDto>,
   })
   public login(
     @Body() loginDto: AuthEmailLoginDto,
@@ -52,7 +52,7 @@ export class AuthController {
 
   @Post('register')
   @ApiOkResponse({
-    type: Promise<StandardResponse<UserEntity>>,
+    type: StandardResponse<UserEntity>,
   })
   async register(
     @Body() createUserDto: AuthRegisterDto,
@@ -62,7 +62,7 @@ export class AuthController {
 
   @Post('confirm-email')
   @ApiOkResponse({
-    type: Promise<StandardResponse<UserEntity>>,
+    type: StandardResponse<UserEntity>,
   })
   async confirmEmail(
     @Body() confirmEmailDto: AuthConfirmEmailDto,
@@ -72,7 +72,7 @@ export class AuthController {
 
   @Post('resend-otp')
   @ApiOkResponse({
-    type: Promise<StandardResponse<UserEntity>>,
+    type: StandardResponse<UserEntity>,
   })
   async resendOtpAfterRegistration(
     @Body() dto: AuthresendOtpDto,
@@ -82,7 +82,7 @@ export class AuthController {
 
   @Post('resend-expired-otp')
   @ApiOkResponse({
-    type: Promise<StandardResponse<AuthOtpEntity>>,
+    type: StandardResponse<AuthOtpEntity>,
   })
   async resendExpiredOtp(
     @Body() dto: AuthresendOtpDto,
@@ -92,7 +92,7 @@ export class AuthController {
 
   @Post('forgot-password')
   @ApiOkResponse({
-    type: Promise<StandardResponse<any>>,
+    type: StandardResponse<any>,
   })
   async forgotPassword(
     @Body() forgotPasswordDto: AuthForgotPasswordDto,
@@ -102,7 +102,7 @@ export class AuthController {
 
   @Post('reset-password')
   @ApiOkResponse({
-    type: Promise<StandardResponse<boolean>>,
+    type: StandardResponse<boolean>,
   })
   resetPassword(
     @Body() resetPasswordDto: AuthResetPasswordDto,
@@ -114,14 +114,14 @@ export class AuthController {
   @SerializeOptions({ groups: ['me'] })
   @Get('me')
   @UseGuards(AuthGuard('jwt'))
-  @ApiOkResponse({ type: Promise<StandardResponse<UserEntity>> })
+  @ApiOkResponse({ type: StandardResponse<UserEntity> })
   @HttpCode(HttpStatus.OK)
   public me(@Req() request): Promise<StandardResponse<UserEntity>> {
     return this.service.me(request.user);
   }
 
   @ApiBearerAuth()
-  @ApiOkResponse({ type: Promise<StandardResponse<RefreshResponseDto>> })
+  @ApiOkResponse({ type: StandardResponse<RefreshResponseDto> })
   @SerializeOptions({ groups: ['me'] })
   @Post('refresh')
   @UseGuards(AuthGuard('jwt-refresh'))
@@ -136,7 +136,7 @@ export class AuthController {
   }
 
   @ApiBearerAuth()
-  @ApiOkResponse({ type: Promise<StandardResponse<boolean>> })
+  @ApiOkResponse({ type: StandardResponse<boolean> })
   @Post('logout')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -149,7 +149,7 @@ export class AuthController {
   @Patch('me')
   @UseGuards(AuthGuard('jwt'))
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({ type: Promise<StandardResponse<User>> })
+  @ApiOkResponse({ type: StandardResponse<User> })
   public update(
     @Request() request,
     @Body() userDto: AuthUpdateDto,
@@ -160,7 +160,7 @@ export class AuthController {
   @ApiBearerAuth()
   @Delete('me')
   @UseGuards(AuthGuard('jwt'))
-  @ApiOkResponse({ type: Promise<StandardResponse<boolean>> })
+  @ApiOkResponse({ type: StandardResponse<boolean> })
   @HttpCode(HttpStatus.NO_CONTENT)
   public async delete(@Request() request): Promise<StandardResponse<boolean>> {
     return this.service.softDelete(request.user);
