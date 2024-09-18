@@ -57,7 +57,18 @@ export class AuthController {
   @Post('login')
   @ApiOkResponse({
     // type: StandardResponse<LoginResponseDto>,
-    schema: { $ref: getSchemaPath(StandardResponse<LoginResponseDto>) },
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(StandardResponse<LoginResponseDto>) },
+        {
+          properties: {
+            payload: {
+              $ref: getSchemaPath(LoginResponseDto),
+            },
+          },
+        },
+      ],
+    },
   })
   public login(
     @Body() loginDto: AuthEmailLoginDto,
