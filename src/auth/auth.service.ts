@@ -435,8 +435,9 @@ export class AuthService {
       user.resetPasswordExpires = new Date(tokenExpires);
       await this.usersRepository.save(user);
 
-      const frontendResetUrl = process.env.FRONTEND_RESET_URL;
-      const resetLink = `${frontendResetUrl}?hash=${hash}&email=${user.email}`;
+      const frontendResetUrl =
+        'https://stg.dam.sofriwebservices.com/reset-password';
+      const resetLink = `${frontendResetUrl}?token=${hash}&email=${user.email}`;
 
       await this.mailService.SendPasswordResetLinkMail(
         dto.email,
