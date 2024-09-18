@@ -28,7 +28,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { FileUploadDto } from '../../files/infrastructure/uploader/s3-presigned/dto/file.dto';
 import { FilesS3PresignedService } from '../../files/infrastructure/uploader/s3-presigned/files.service';
 import { KycUpdates } from './kyc.enum';
-import { ResponseService } from '../../utils/services/response.service';
+import {
+  ResponseService,
+  StandardResponse,
+} from '../../utils/services/response.service';
 
 @Injectable()
 export class KycService {
@@ -56,13 +59,25 @@ export class KycService {
     await this.userRepository.save(user);
   }
 
-  async getKycProgress(user: UserEntity): Promise<number> {
-    const totalSteps = Object.keys(KycUpdates).length;
-    const completedSteps = Object.values(user.kycCompletionStatus || {}).filter(
-      Boolean,
-    ).length;
+  async getKycProgress(user: UserEntity): Promise<StandardResponse<number>> {
+    try {
+      const totalSteps = Object.keys(KycUpdates).length;
+      const completedSteps = Object.values(
+        user.kycCompletionStatus || {},
+      ).filter(Boolean).length;
 
-    return Math.round((completedSteps / totalSteps) * 100);
+      const percentage = Math.round((completedSteps / totalSteps) * 100);
+
+      return this.responseService.success(
+        'kyc Progress returned succssfully',
+        percentage,
+      );
+    } catch (error) {
+      return this.responseService.internalServerError(
+        'Error returning Kyc Progress',
+        error,
+      );
+    }
   }
 
   // Passport Photograph Verification Initiation
@@ -97,11 +112,13 @@ export class KycService {
           idNumber = dto.voter_id!;
           break;
         default:
-          throw new BadRequestException('Invalid ID type provided');
+          return this.responseService.badRequest('Invalid ID type provided');
       }
 
       if (!idNumber) {
-        throw new BadRequestException(`No ${idType} provided for verification`);
+        return this.responseService.badRequest(
+          `No ${idType} provided for verification`,
+        );
       }
 
       const response = await this.smileService.performIdVerification(
@@ -128,10 +145,8 @@ export class KycService {
         `ID verification (${idType}) initiated for user ${user.id}`,
       );
 
-      return this.responseService.Response(
-        true,
+      return this.responseService.success(
         'id verficication initiated successfuly',
-        HttpStatus.OK,
         { response },
       );
     } catch (error) {
@@ -139,10 +154,8 @@ export class KycService {
         `Failed to initiate ID verification for user ${user.id}`,
         error.stack,
       );
-      return this.responseService.Response(
-        false,
-        'something happened',
-        HttpStatus.INTERNAL_SERVER_ERROR,
+      return this.responseService.internalServerError(
+        'Error initiating ID verification',
         { error: error },
       );
     }
@@ -187,19 +200,17 @@ export class KycService {
       console.log(`Selfie KYC process initiated for user ${user.id}`);
 
       // Return the result of the selfie job submission
-      return this.responseService.Response(
-        true,
+      return this.responseService.success(
         'smart selfie successfully initiated',
-        HttpStatus.OK,
         { response },
       );
     } catch (error) {
       console.error('Failed to submit selfie for verification:', error.stack);
       return this.responseService.Response(
         false,
-        'something went wrong',
+        'Error initializing smart selfie',
         HttpStatus.INTERNAL_SERVER_ERROR,
-        { error: error },
+        error,
       );
     }
   }
@@ -207,7 +218,7 @@ export class KycService {
   async confirmSignatureUpload(
     user: UserEntity,
     file: Express.Multer.File,
-  ): Promise<any> {
+  ): Promise<StandardResponse<UserEntity>> {
     try {
       const fileUploadDto = {
         fileName: file.originalname,
@@ -230,28 +241,27 @@ export class KycService {
         account: user.id,
       });
 
-      return this.responseService.Response(
-        true,
+      return this.responseService.success(
         'signature uploaded successfully',
-        HttpStatus.OK,
-        { user },
+        user,
       );
     } catch (error) {
       this.logger.error(
         `Error confirming signature upload for user ${user.id}`,
         error.stack,
       );
-      return this.responseService.Response(
-        false,
-        'something went wrong',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        { error: error },
+      return this.responseService.internalServerError(
+        'Error uploading signature',
+        error,
       );
     }
   }
 
   // Politically Exposed Person (PEP) Information
-  async updatePepDetails(user: UserEntity, dto: PepDto): Promise<any> {
+  async updatePepDetails(
+    user: UserEntity,
+    dto: PepDto,
+  ): Promise<StandardResponse<UserEntity>> {
     try {
       // Update PEP details
       user.PEP = dto.PEP;
@@ -270,11 +280,9 @@ export class KycService {
 
       // Log success
       this.logger.log(`PEP details updated for user ${user.id}`);
-      return this.responseService.Response(
-        true,
+      return this.responseService.success(
         'pep details updated successfully',
-        HttpStatus.OK,
-        { user },
+        user,
       );
     } catch (error) {
       // Log and throw error if something goes wrong
@@ -282,11 +290,9 @@ export class KycService {
         `Error updating PEP details for user ${user.id}`,
         error.stack,
       );
-      return this.responseService.Response(
-        false,
-        'something went wrong',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        { error: error },
+      return this.responseService.internalServerError(
+        'Error updating PEP details',
+        error,
       );
     }
   }
@@ -295,7 +301,7 @@ export class KycService {
   async updateEmploymentDetails(
     user: UserEntity,
     employmentDetails: EmploymentDetailsDto,
-  ): Promise<any> {
+  ): Promise<StandardResponse<UserEntity>> {
     try {
       // Map employment details to the user entity
       Object.assign(user, {
@@ -324,11 +330,9 @@ export class KycService {
 
       // Log success
       this.logger.log(`Employment details updated for user ${user.id}`);
-      return this.responseService.Response(
-        true,
+      return this.responseService.success(
         'employment details updated successfully',
-        HttpStatus.OK,
-        { user },
+        user,
       );
     } catch (error) {
       // Log error and rethrow exception
@@ -336,21 +340,18 @@ export class KycService {
         `Error updating employment details for user ${user.id}`,
         error.stack,
       );
-      return this.responseService.Response(
-        false,
-        'something went wrong',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        { user },
+      return this.responseService.internalServerError(
+        'Error updating Employment Details',
+        error,
       );
     }
   }
 
-  //update bank details
   // New method: Update Bank Details
   async updateBankDetails(
     user: UserEntity,
     bankDetails: BankDetailsDto,
-  ): Promise<any> {
+  ): Promise<StandardResponse<UserEntity>> {
     try {
       const isValid = await this.smileService.performBankVerification(
         user.id.toString(),
@@ -359,7 +360,7 @@ export class KycService {
       );
 
       if (!isValid) {
-        throw new UnprocessableEntityException('Invalid account number');
+        return this.responseService.badRequest('Invalid account number');
       }
 
       user.accountNumber = bankDetails.accountNumber;
@@ -376,22 +377,18 @@ export class KycService {
       });
 
       this.logger.log(`Bank details updated for user ${user.id}`);
-      return this.responseService.Response(
-        true,
+      return this.responseService.success(
         'bank details updated successfully',
-        HttpStatus.OK,
-        { user },
+        user,
       );
     } catch (error) {
       this.logger.error(
         `Error updating bank details for user ${user.id}`,
         error.stack,
       );
-      return this.responseService.Response(
-        false,
-        'something went wrong',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        { error: error },
+      return this.responseService.internalServerError(
+        'Error updating bank details for user',
+        error,
       );
     }
   }
@@ -400,7 +397,7 @@ export class KycService {
   async updateNextOfkin(
     user: UserEntity,
     nextofkinDetailsdto: NextOfKinDto,
-  ): Promise<any> {
+  ): Promise<StandardResponse<UserEntity>> {
     try {
       // Map employment details to the user entity
       Object.assign(user, {
@@ -426,22 +423,18 @@ export class KycService {
       });
 
       this.logger.log(`NextOFKin details updated for user ${user.id}`);
-      return this.responseService.Response(
-        true,
+      return this.responseService.success(
         'next of kin details updated successfully',
-        HttpStatus.OK,
-        { user },
+        user,
       );
     } catch (error) {
       this.logger.error(
         `Error updating nextOfKin details for user ${user.id}`,
         error.stack,
       );
-      return this.responseService.Response(
-        false,
-        'something went wrong',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        { error: error },
+      return this.responseService.internalServerError(
+        'Error Updating nextOfKin details',
+        error,
       );
     }
   }
@@ -450,7 +443,7 @@ export class KycService {
   async uploadAddressProof(
     user: UserEntity,
     file: Express.Multer.File,
-  ): Promise<any> {
+  ): Promise<StandardResponse<UserEntity>> {
     try {
       const fileUploadDto = {
         fileName: file.originalname,
@@ -473,22 +466,18 @@ export class KycService {
       });
 
       this.logger.log(`Address proof uploaded for user ${user.id}`);
-      return this.responseService.Response(
-        true,
+      return this.responseService.success(
         'address proof uploaded successfully',
-        HttpStatus.OK,
-        { user },
+        user,
       );
     } catch (error) {
       this.logger.error(
         `Error uploading address proof for user ${user.id}`,
         error.stack,
       );
-      return this.responseService.Response(
-        false,
-        'something went wrong',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        { error: error },
+      return this.responseService.internalServerError(
+        'Error uploading address proof',
+        error,
       );
     }
   }
@@ -497,7 +486,7 @@ export class KycService {
   async updateTaxDetails(
     user: UserEntity,
     taxDetails: TaxDetailsDto,
-  ): Promise<any> {
+  ): Promise<StandardResponse<UserEntity>> {
     try {
       Object.assign(user, {
         taxLocation: taxDetails.taxLocation,
@@ -516,22 +505,18 @@ export class KycService {
       });
 
       this.logger.log(`Tax details updated for user ${user.id}`);
-      return this.responseService.Response(
-        true,
-        'tas details updated successfully',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        { user },
+      return this.responseService.success(
+        'Tax  details updated successfully',
+        user,
       );
     } catch (error) {
       this.logger.error(
         `Error updating tax details for user ${user.id}`,
         error.stack,
       );
-      return this.responseService.Response(
-        false,
-        'something went wrong',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        { user },
+      return this.responseService.internalServerError(
+        'Error updating Tax Details',
+        error,
       );
     }
   }
