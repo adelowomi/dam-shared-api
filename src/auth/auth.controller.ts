@@ -13,7 +13,13 @@ import {
   Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiTags,
+  ApiExtraModels,
+  getSchemaPath,
+} from '@nestjs/swagger';
 import { AuthEmailLoginDto } from './dto/auth-email-login.dto';
 import { AuthForgotPasswordDto } from './dto/auth-forgot-password.dto';
 import { AuthConfirmEmailDto } from './dto/auth-confirm-email.dto';
@@ -34,6 +40,14 @@ import { AuthOtpEntity } from '../users/infrastructure/persistence/relational/en
   path: 'auth',
   version: '1',
 })
+@ApiExtraModels(
+  StandardResponse,
+  User,
+  UserEntity,
+  AuthOtpEntity,
+  LoginResponseDto,
+  RefreshResponseDto,
+)
 export class AuthController {
   constructor(private readonly service: AuthService) {}
 
@@ -42,7 +56,8 @@ export class AuthController {
   })
   @Post('login')
   @ApiOkResponse({
-    type: StandardResponse<LoginResponseDto>,
+    // type: StandardResponse<LoginResponseDto>,
+    schema: { $ref: getSchemaPath(StandardResponse<LoginResponseDto>) },
   })
   public login(
     @Body() loginDto: AuthEmailLoginDto,
