@@ -1,4 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
+import { ApiProperty } from '@nestjs/swagger';
 
 @Injectable()
 export class ResponseService {
@@ -45,10 +46,15 @@ export class ResponseService {
   }
 }
 export class StandardResponse<T> {
+  @ApiProperty({ type: Boolean })
   public success: boolean;
+  @ApiProperty({ type: String })
   public message: string;
+
   public status: HttpStatus;
+  @ApiProperty({ type: 'object' })
   public payload?: T;
+  @ApiProperty({ type: 'object' })
   public errors?: any;
 
   constructor(
