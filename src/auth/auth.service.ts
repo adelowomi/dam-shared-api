@@ -244,6 +244,7 @@ export class AuthService {
       // Verify and update the customer's status
       user.isVerified = true;
       user.status = StatusEnum.ACTIVE;
+      user.registerAndVerifiedIsdone=true
       user.kycCompletionStatus = {
         ...user.kycCompletionStatus,
         userRegisteredAndVerified: true,

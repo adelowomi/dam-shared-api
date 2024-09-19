@@ -133,10 +133,20 @@ export class UserEntity extends EntityRelationalHelper {
   @Column({ type: 'boolean' ,nullable:true})
   PEP: boolean;
 
+  @ApiProperty()
+  @Index()
+  @Column({ type: 'boolean' ,nullable:true})
+  PEPisdone: boolean;
+
   @ApiProperty({ type: String })
   @Index()
   @Column({ type: String, nullable: true })
   employmentStatus: string;
+
+  @ApiProperty()
+  @Index()
+  @Column({ type: 'boolean' ,nullable:true})
+  employmentStatusIsdone: boolean;
 
   @ApiProperty({ type: String })
   @Index()
@@ -147,6 +157,12 @@ export class UserEntity extends EntityRelationalHelper {
   @Index()
   @Column({ type: String, nullable: true })
   accountNumber: string;
+
+  @ApiProperty()
+  @Index()
+  @Column({ type: 'boolean' ,nullable:true})
+  bankdetaislprovidedIsdone: boolean;
+
 
   @ApiProperty({ type: Boolean})
   @Index()
@@ -162,6 +178,11 @@ export class UserEntity extends EntityRelationalHelper {
   @Index()
   @Column({ type: String, nullable: true })
   taxIdentityNumber: string;
+
+  @ApiProperty()
+  @Index()
+  @Column({ type: 'boolean' ,nullable:true})
+  taxdetailsprovidedIsdone: boolean;
 
   @ApiProperty({ type: String })
   @Index()
@@ -197,6 +218,11 @@ export class UserEntity extends EntityRelationalHelper {
   @Index()
   @Column({ type: String, nullable: true })
   otherInvestmentSource: string;
+
+  @ApiProperty()
+  @Index()
+  @Column({ type: 'boolean' ,nullable:true})
+  employmentdetailsProvidedIsdone: boolean;
 
   @ApiProperty({ type: String, example: 'judy' })
   @Index()
@@ -238,10 +264,41 @@ export class UserEntity extends EntityRelationalHelper {
   @Column({ type: String, nullable: true })
   otherNextOfKinRelationship: string;
 
+  @ApiProperty()
+  @Index()
+  @Column({ type: 'boolean' ,nullable:true})
+  nextofkinDetailsprovidedIsdone: boolean;
+
   @ApiProperty({ type: String })
   @Index()
   @Column({ type: String, nullable: true })
   addressProofPath: string;
+
+  @ApiProperty()
+  @Index()
+  @Column({ type: 'boolean' ,nullable:true})
+  addressProofProvidedIsdone: boolean;
+
+  @ApiProperty()
+  @Index()
+  @Column({ type: 'boolean' ,nullable:true})
+  governmentIdVerifiedIsdone: boolean;
+
+  @ApiProperty()
+  @Index()
+  @Column({ type: 'boolean' ,nullable:true})
+  smartPhotographyIsdone: boolean;
+
+  @ApiProperty()
+  @Index()
+  @Column({ type: 'boolean' ,nullable:true})
+  signatureUploadedIsdone: boolean;
+
+  @ApiProperty()
+  @Index()
+  @Column({ type: 'boolean' ,nullable:true})
+  registerAndVerifiedIsdone: boolean;
+
 
 
 
