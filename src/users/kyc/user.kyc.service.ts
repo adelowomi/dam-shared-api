@@ -82,7 +82,7 @@ export class KycService {
 
   // Passport Photograph Verification Initiation
 
-  async identifyID(user: UserEntity, dto: NigerianIdDto): Promise<any> {
+  async identifyID(user: UserEntity, dto: NigerianIdDto): Promise<StandardResponse<any>> {
     try {
       console.log('this line was passed ');
       let idType: string;
@@ -165,7 +165,7 @@ export class KycService {
     user: UserEntity,
     base64Selfie: string,
     libraryVersion: string,
-  ): Promise<any> {
+  ): Promise<StandardResponse<any>> {
     try {
       console.log('Submitting selfie for verification...');
 

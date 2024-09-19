@@ -49,15 +49,47 @@ export class KycController {
   constructor(private readonly kycService: KycService) {}
 
   @Post('initiatiate-nationalId-verification')
+  @ApiOkResponse({
+    schema:{
+        allOf:[
+            {
+                $ref:getSchemaPath(StandardResponse<any>)
+            },
+            {
+                properties:{
+                    payload:{
+                        $ref:getSchemaPath(Boolean)
+                    }
+                }
+            }
+        ]
+    }
+  })
   async initiatePassportPhotographVerification(
     @Req() req,
     @Body() dto: NigerianIdDto,
-  ) {
+  ):Promise<StandardResponse<any>> {
     return await this.kycService.identifyID(req.user, dto);
   }
 
   @Patch('proof-of-life-verification')
-  async initiateSelfieVerification(@Body() body: any, @Req() req) {
+  @ApiOkResponse({
+    schema:{
+        allOf:[
+            {
+                $ref:getSchemaPath(StandardResponse<any>)
+            },
+            {
+                properties:{
+                    payload:{
+                        $ref:getSchemaPath(Boolean)
+                    }
+                }
+            }
+        ]
+    }
+  })
+  async initiateSelfieVerification(@Body() body: any, @Req() req):Promise<StandardResponse<any>>  {
     const { images, partner_params } = body;
 
     if (!images || images.length === 0) {
