@@ -47,19 +47,8 @@ export class KycService {
     private responseService: ResponseService,
   ) {}
 
-  private async updateKycStatus(
-    user: UserEntity,
-    status: KycUpdates,
-  ): Promise<void> {
-    if (!user.kycCompletionStatus) {
-      user.kycCompletionStatus = {} as { [key in KycUpdates]: boolean };
-    }
-    user.kycCompletionStatus[status] = true;
-    user.updatedAt = new Date();
-    await this.userRepository.save(user);
-  }
+  
 
- 
 
   async getKycProgress(user: UserEntity): Promise<StandardResponse<number>> {
     try {
@@ -98,10 +87,7 @@ export class KycService {
     
   }
 
-  private async updateUser1(userId: number, updateData: Partial<UserEntity>): Promise<UserEntity|null> {
-    await this.userRepository.update(userId, updateData);
-    return this.userRepository.findOne({ where: { id: userId } });
-  }
+ 
   
   
 
@@ -157,10 +143,11 @@ export class KycService {
       );  
       console.log('🚀 ~ KycService ~ identifyID ~ response:', response);
 
-      const updatedUser = await this.updateUser(user.id, {
-        updatedAt: new Date()
+      await this.updateUser(user.id, {
+        updatedAt: new Date(),
+        kycCompletionStatus:{...user.kycCompletionStatus, 'governmentIdProvided':true}
       });
-      await this.updateKycStatus(user, KycUpdates.PEPupdated);
+      
 
      
 
@@ -215,11 +202,10 @@ export class KycService {
       console.log('Selfie job submitted:', response);
 
 
-        const updatedUser = await this.updateUser(user.id, {
-        updatedAt: new Date()
+      await this.updateUser(user.id, {
+        updatedAt: new Date(),
+        kycCompletionStatus:{...user.kycCompletionStatus, 'selfieVerificationInitiated':true}
       });
-      await this.updateKycStatus(user, KycUpdates.selfieVerificationInitiated);
-
       // Send a notification to the user about the initiation of the selfie KYC process
       await this.notificationService.create({
         message: `Hello ${user.firstName}, you have initiated the selfie KYC process.`,
@@ -263,10 +249,11 @@ export class KycService {
 
 
       
-        user.signatureImagePath=uploadSignedUrl,
-        user.updatedAt= new Date()
-      
-      await this.updateKycStatus(user, KycUpdates.signatureUploaded);
+        await this.updateUser(user.id, {
+          updatedAt: new Date(),
+          signatureImagePath:uploadSignedUrl,
+          kycCompletionStatus:{...user.kycCompletionStatus, 'signatureUploaded':true}
+        });
 
       await this.userRepository.save(user)
 
