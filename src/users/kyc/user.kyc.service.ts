@@ -59,6 +59,8 @@ export class KycService {
     await this.userRepository.save(user);
   }
 
+ 
+
   async getKycProgress(user: UserEntity): Promise<StandardResponse<number>> {
     try {
       const totalSteps = Object.keys(KycUpdates).length;
@@ -79,6 +81,29 @@ export class KycService {
       );
     }
   }
+  private async updateUser(userId: number, updateData: Partial<UserEntity>): Promise<UserEntity | null> {
+    const existingUser = await this.userRepository.findOne({ where: { id: userId } });
+    console.log("🚀 ~ KycService ~ updateUser ~ existingUser:", existingUser)
+  
+    if (!existingUser) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+  
+    // Merge existing data with the new update data
+    const updatedUser = { ...existingUser, ...updateData };
+    console.log("🚀 ~ KycService ~ updateUser ~ updatedUser:", updatedUser)
+    
+    return await this.userRepository.save(updatedUser);
+  
+    
+  }
+
+  private async updateUser1(userId: number, updateData: Partial<UserEntity>): Promise<UserEntity|null> {
+    await this.userRepository.update(userId, updateData);
+    return this.userRepository.findOne({ where: { id: userId } });
+  }
+  
+  
 
   // Passport Photograph Verification Initiation
 
@@ -129,11 +154,15 @@ export class KycService {
         user.lastName,
         user.DOB,
         user.phoneNumber,
-      );
+      );  
       console.log('🚀 ~ KycService ~ identifyID ~ response:', response);
 
-      await this.updateKycStatus(user, KycUpdates.governmentIdProvided);
-      await this.userRepository.save(user);
+      const updatedUser = await this.updateUser(user.id, {
+        updatedAt: new Date()
+      });
+      await this.updateKycStatus(user, KycUpdates.PEPupdated);
+
+     
 
       await this.notificationService.create({
         message: `Hello ${user.firstName}, you have initiated the KYC process for your ${idType}.`,
@@ -185,9 +214,11 @@ export class KycService {
 
       console.log('Selfie job submitted:', response);
 
-      // Update user entity to reflect that the selfie verification was initiated
+
+        const updatedUser = await this.updateUser(user.id, {
+        updatedAt: new Date()
+      });
       await this.updateKycStatus(user, KycUpdates.selfieVerificationInitiated);
-      await this.userRepository.save(user); // This assumes you have such a field in your entity
 
       // Send a notification to the user about the initiation of the selfie KYC process
       await this.notificationService.create({
@@ -204,6 +235,7 @@ export class KycService {
         'smart selfie successfully initiated',
         { response },
       );
+
     } catch (error) {
       console.error('Failed to submit selfie for verification:', error.stack);
       return this.responseService.Response(
@@ -229,10 +261,15 @@ export class KycService {
       const { file: uploadedFile, uploadSignedUrl } =
         await this.filesS3PresignedService.create(fileUploadDto);
 
-      // Update user's signature image path
-      user.signatureImagePath = uploadSignedUrl;
+
+      
+        user.signatureImagePath=uploadSignedUrl,
+        user.updatedAt= new Date()
+      
       await this.updateKycStatus(user, KycUpdates.signatureUploaded);
-      await this.userRepository.save(user);
+
+      await this.userRepository.save(user)
+
 
       // Send a notification about the update
       await this.notificationService.create({
@@ -262,14 +299,17 @@ export class KycService {
     user: UserEntity,
     dto: PepDto,
   ): Promise<StandardResponse<UserEntity>> {
+    console.log("🚀 ~ KycService ~ user:", user)
     try {
-      // Update PEP details
-      user.PEP = dto.PEP;
-      user.updatedAt = new Date();
-      await this.updateKycStatus(user, KycUpdates.PEPupdated);
+     
 
-      // Save updated user details
-      await this.userRepository.save(user);
+       await this.updateUser(user.id,{
+        PEP:dto.PEP,
+        kycCompletionStatus : { ...user.kycCompletionStatus, 'PEPupdated': true },
+        updatedAt:new Date()
+
+       })
+       
 
       // Send a notification about the update
       await this.notificationService.create({
@@ -279,7 +319,7 @@ export class KycService {
       });
 
       // Log success
-      this.logger.log(`PEP details updated for user ${user.id}`);
+      //this.logger.log(`PEP details updated for user ${user.id}`);
       return this.responseService.success(
         'pep details updated successfully',
         user,
@@ -304,22 +344,21 @@ export class KycService {
   ): Promise<StandardResponse<UserEntity>> {
     try {
       // Map employment details to the user entity
-      Object.assign(user, {
-        employmentStatus: employmentDetails.employmentStatus,
-        companyName: employmentDetails.companyName,
-        jobTitle: employmentDetails.jobTitle,
-        companyEmail: employmentDetails.companyEmail,
-        companyPhone: employmentDetails.companyPhone,
-        incomeBand: employmentDetails.incomeBand,
-        investmentSource: employmentDetails.investmentSource,
-        otherInvestmentSource: employmentDetails.otherInvestmentSource,
+
+      await this.updateUser(user.id, {
+        employmentStatus:employmentDetails.employmentStatus,
+        companyName:employmentDetails.companyName,
+        jobTitle:employmentDetails.jobTitle,
+        companyEmail:employmentDetails.companyEmail,
+        companyPhone:employmentDetails.companyPhone,
+        incomeBand:employmentDetails.incomeBand,
+        investmentSource:employmentDetails.investmentSource,
+        otherInvestmentSource:employmentDetails.otherInvestmentSource,
+        kycCompletionStatus : { ...user.kycCompletionStatus, 'employmentDetailsProvided': true },
+        updatedAt: new Date()
       });
-
-      user.updatedAt = new Date();
-      await this.updateKycStatus(user, KycUpdates.EemploymentDetailsProvided);
-
-      // Save updated user data
-      await this.userRepository.save(user);
+      
+    
 
       // Send notification about employment details update
       await this.notificationService.create({
@@ -363,12 +402,16 @@ export class KycService {
         return this.responseService.badRequest('Invalid account number');
       }
 
-      user.accountNumber = bankDetails.accountNumber;
-      user.bankVerified = true;
-      user.updatedAt = new Date();
-      await this.updateKycStatus(user, KycUpdates.bankDetailsProvided);
+     
 
-      await this.userRepository.save(user);
+      await this.updateUser(user.id, {
+        accountNumber:bankDetails.accountNumber,
+        bankVerified:true,
+        kycCompletionStatus : { ...user.kycCompletionStatus, 'bankDetailsProvided': true },
+        updatedAt: new Date()
+      });
+     
+
 
       await this.notificationService.create({
         message: `Hello ${user.firstName}, you have successfully updated your bank details.`,
@@ -398,23 +441,26 @@ export class KycService {
     user: UserEntity,
     nextofkinDetailsdto: NextOfKinDto,
   ): Promise<StandardResponse<UserEntity>> {
+    console.log("🚀 ~ KycService ~ user:", user)
     try {
       // Map employment details to the user entity
-      Object.assign(user, {
-        nextOfKinMiddlename: nextofkinDetailsdto.nextOfKinMiddlename,
-        nextOfKinFirstname: nextofkinDetailsdto.nextOfKinFirstname,
-        nextOfKinGender: nextofkinDetailsdto.nextOfKinGender,
-        nextOfKinEmail: nextofkinDetailsdto.nextOfKinEmail,
-        nextOfKinPhone: nextofkinDetailsdto.nextOfKinPhone,
-        nextOfkinRelationship: nextofkinDetailsdto.nextofkinRelationship,
-        otherNextOfKinRelationship:
-          nextofkinDetailsdto.otherNextOfKinRelatioship,
+  
+
+
+      await this.updateUser(user.id, {
+        nextOfKinMiddlename:nextofkinDetailsdto.nextOfKinMiddlename,
+        nextOfKinFirstname:nextofkinDetailsdto.nextOfKinFirstname,
+        nextOfKinGender:nextofkinDetailsdto.nextOfKinGender,
+        nextOfKinLastname:nextofkinDetailsdto.nextOfKinLastname,
+        nextOfKinEmail:nextofkinDetailsdto.nextOfKinEmail,
+        nextOfKinPhone:nextofkinDetailsdto.nextOfKinPhone,
+        nextOfkinRelationship:nextofkinDetailsdto.nextofkinRelationship,
+        kycCompletionStatus : { ...user.kycCompletionStatus, 'nextOfKinDetailsProvided': true },
+        updatedAt: new Date()
       });
+     
 
-      user.updatedAt = new Date();
-      await this.updateKycStatus(user, KycUpdates.nextOfKinDetailsProvided);
 
-      await this.userRepository.save(user);
 
       await this.notificationService.create({
         message: `Hello ${user.firstName}, you have successfully updated next of kin details.`,
@@ -454,10 +500,13 @@ export class KycService {
       const { file: uploadedFile, uploadSignedUrl } =
         await this.filesS3PresignedService.create(fileUploadDto);
 
-      user.addressProofPath = uploadSignedUrl;
-      user.updatedAt = new Date();
-      await this.updateKycStatus(user, KycUpdates.addressProofProvided);
-      await this.userRepository.save(user);
+
+       await this.updateUser(user.id, {
+        addressProofPath:uploadSignedUrl,
+        kycCompletionStatus : { ...user.kycCompletionStatus, 'addressProofProvided': true },
+        updatedAt: new Date()
+      });
+      
 
       await this.notificationService.create({
         message: `Hello ${user.firstName}, you have successfully uploaded address proof.`,
@@ -493,10 +542,15 @@ export class KycService {
         taxIdentityNumber: taxDetails.taxIdentityNumber,
       });
 
-      user.updatedAt = new Date();
-      await this.updateKycStatus(user, KycUpdates.taxDetailsProvided);
 
-      await this.userRepository.save(user);
+      await this.updateUser(user.id, {
+        taxLocation:taxDetails.taxLocation,
+        taxIdentityNumber:taxDetails.taxIdentityNumber,
+        kycCompletionStatus : { ...user.kycCompletionStatus, 'taxDetailsProvided': true },
+        updatedAt: new Date()
+      });
+      
+     
 
       await this.notificationService.create({
         message: `Hello ${user.firstName}, you have successfully updated tax details.`,
