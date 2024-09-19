@@ -192,9 +192,7 @@ export class AuthController {
         { $ref: getSchemaPath(StandardResponse<LoginResponseDto>) },
         {
           properties: {
-            payload: {
-              $ref: Boolean,
-            },
+            payload: {},
           },
         },
       ],
