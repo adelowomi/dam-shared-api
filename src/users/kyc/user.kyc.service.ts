@@ -577,18 +577,30 @@ export class KycService {
   ): Promise<
     StandardResponse<{ steps: Record<string, boolean>; percentage: number }>
   > {
+    console.log('🚀 ~ KycService ~ user:', user);
+
+    // fetch user details with id in the passed user
+    const thisUser = await this.userRepository.findOne({
+      where: { id: user.id },
+    });
+
+    if (!thisUser) {
+      return this.responseService.notFound('User not found');
+    }
+
     try {
       const kycSteps = {
-        governmentIdVerifiedIsdone: user.governmentIdVerifiedIsdone,
-        smartPhotographyIsdone: user.smartPhotographyIsdone,
-        signatureUploadedIsdone: user.signatureUploadedIsdone,
-        EPisdone: user.PEPisdone,
-        employmentdetailsProvidedIsdone: user.employmentdetailsProvidedIsdone,
-        bankdetaislprovidedIsdone: user.bankdetaislprovidedIsdone,
-        nextofkinDetailsprovidedIsdone: user.nextofkinDetailsprovidedIsdone,
-        addressProofProvidedIsdone: user.addressProofProvidedIsdone,
-        taxdetailsprovidedIsdone: user.taxdetailsprovidedIsdone,
-        registerAndVerifiedIsdone: user.registerAndVerifiedIsdone,
+        governmentIdVerifiedIsdone: thisUser.governmentIdVerifiedIsdone,
+        smartPhotographyIsdone: thisUser.smartPhotographyIsdone,
+        signatureUploadedIsdone: thisUser.signatureUploadedIsdone,
+        EPisdone: thisUser.PEPisdone,
+        employmentdetailsProvidedIsdone:
+          thisUser.employmentdetailsProvidedIsdone,
+        bankdetaislprovidedIsdone: thisUser.bankdetaislprovidedIsdone,
+        nextofkinDetailsprovidedIsdone: thisUser.nextofkinDetailsprovidedIsdone,
+        addressProofProvidedIsdone: thisUser.addressProofProvidedIsdone,
+        taxdetailsprovidedIsdone: thisUser.taxdetailsprovidedIsdone,
+        registerAndVerifiedIsdone: thisUser.registerAndVerifiedIsdone,
       };
 
       const completedSteps = Object.values(kycSteps).filter(
