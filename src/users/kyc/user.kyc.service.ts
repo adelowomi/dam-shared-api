@@ -47,9 +47,6 @@ export class KycService {
     private responseService: ResponseService,
   ) {}
 
-  
-
-
   async getKycProgress(user: UserEntity): Promise<StandardResponse<number>> {
     try {
       const totalSteps = Object.keys(KycUpdates).length;
@@ -70,26 +67,25 @@ export class KycService {
       );
     }
   }
-  private async updateUser(userId: number, updateData: Partial<UserEntity>): Promise<UserEntity | null> {
-    const existingUser = await this.userRepository.findOne({ where: { id: userId } });
-    console.log("🚀 ~ KycService ~ updateUser ~ existingUser:", existingUser)
-  
+  private async updateUser(
+    userId: number,
+    updateData: Partial<UserEntity>,
+  ): Promise<UserEntity | null> {
+    const existingUser = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    console.log('🚀 ~ KycService ~ updateUser ~ existingUser:', existingUser);
+
     if (!existingUser) {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
-  
+
     // Merge existing data with the new update data
     const updatedUser = { ...existingUser, ...updateData };
-    console.log("🚀 ~ KycService ~ updateUser ~ updatedUser:", updatedUser)
-    
-    return await this.userRepository.save(updatedUser);
-  
-    
-  }
+    console.log('🚀 ~ KycService ~ updateUser ~ updatedUser:', updatedUser);
 
- 
-  
-  
+    return await this.userRepository.save(updatedUser);
+  }
 
   // Passport Photograph Verification Initiation
 
@@ -143,17 +139,17 @@ export class KycService {
         user.lastName,
         user.DOB,
         user.phoneNumber,
-      );  
+      );
       console.log('🚀 ~ KycService ~ identifyID ~ response:', response);
 
       await this.updateUser(user.id, {
         updatedAt: new Date(),
-        governmentIdVerifiedIsdone:true,
-        kycCompletionStatus:{...user.kycCompletionStatus, 'governmentIdProvided':true}
+        governmentIdVerifiedIsdone: true,
+        kycCompletionStatus: {
+          ...user.kycCompletionStatus,
+          governmentIdProvided: true,
+        },
       });
-      
-
-     
 
       await this.notificationService.create({
         message: `Hello ${user.firstName}, you have initiated the KYC process for your ${idType}.`,
@@ -205,11 +201,13 @@ export class KycService {
 
       console.log('Selfie job submitted:', response);
 
-
       await this.updateUser(user.id, {
         updatedAt: new Date(),
-        smartPhotographyIsdone:true,
-        kycCompletionStatus:{...user.kycCompletionStatus, 'selfieVerificationInitiated':true}
+        smartPhotographyIsdone: true,
+        kycCompletionStatus: {
+          ...user.kycCompletionStatus,
+          selfieVerificationInitiated: true,
+        },
       });
       // Send a notification to the user about the initiation of the selfie KYC process
       await this.notificationService.create({
@@ -226,7 +224,6 @@ export class KycService {
         'smart selfie successfully initiated',
         { response },
       );
-
     } catch (error) {
       console.error('Failed to submit selfie for verification:', error.stack);
       return this.responseService.Response(
@@ -252,17 +249,17 @@ export class KycService {
       const { file: uploadedFile, uploadSignedUrl } =
         await this.filesS3PresignedService.create(fileUploadDto);
 
+      await this.updateUser(user.id, {
+        updatedAt: new Date(),
+        signatureUploadedIsdone: true,
+        signatureImagePath: uploadSignedUrl,
+        kycCompletionStatus: {
+          ...user.kycCompletionStatus,
+          signatureUploaded: true,
+        },
+      });
 
-      
-        await this.updateUser(user.id, {
-          updatedAt: new Date(),
-          signatureUploadedIsdone:true,
-          signatureImagePath:uploadSignedUrl,
-          kycCompletionStatus:{...user.kycCompletionStatus, 'signatureUploaded':true}
-        });
-
-      await this.userRepository.save(user)
-
+      await this.userRepository.save(user);
 
       // Send a notification about the update
       await this.notificationService.create({
@@ -292,17 +289,13 @@ export class KycService {
     user: UserEntity,
     dto: PepDto,
   ): Promise<StandardResponse<UserEntity>> {
-    console.log("🚀 ~ KycService ~ user:", user)
+    console.log('🚀 ~ KycService ~ user:', user);
     try {
-     
-
-       await this.updateUser(user.id,{
-        PEP:dto.PEP,
-        PEPisdone:true,
-        updatedAt:new Date()
-
-       })
-       
+      await this.updateUser(user.id, {
+        PEP: dto.PEP,
+        PEPisdone: true,
+        updatedAt: new Date(),
+      });
 
       // Send a notification about the update
       await this.notificationService.create({
@@ -339,20 +332,21 @@ export class KycService {
       // Map employment details to the user entity
 
       await this.updateUser(user.id, {
-        employmentStatus:employmentDetails.employmentStatus,
-        companyName:employmentDetails.companyName,
-        jobTitle:employmentDetails.jobTitle,
-        companyEmail:employmentDetails.companyEmail,
-        companyPhone:employmentDetails.companyPhone,
-        incomeBand:employmentDetails.incomeBand,
-        investmentSource:employmentDetails.investmentSource,
-        otherInvestmentSource:employmentDetails.otherInvestmentSource,
-        kycCompletionStatus : { ...user.kycCompletionStatus, 'employmentDetailsProvided': true },
-        employmentdetailsProvidedIsdone:true,
-        updatedAt: new Date()
+        employmentStatus: employmentDetails.employmentStatus,
+        companyName: employmentDetails.companyName,
+        jobTitle: employmentDetails.jobTitle,
+        companyEmail: employmentDetails.companyEmail,
+        companyPhone: employmentDetails.companyPhone,
+        incomeBand: employmentDetails.incomeBand,
+        investmentSource: employmentDetails.investmentSource,
+        otherInvestmentSource: employmentDetails.otherInvestmentSource,
+        kycCompletionStatus: {
+          ...user.kycCompletionStatus,
+          employmentDetailsProvided: true,
+        },
+        employmentdetailsProvidedIsdone: true,
+        updatedAt: new Date(),
       });
-      
-    
 
       // Send notification about employment details update
       await this.notificationService.create({
@@ -396,17 +390,16 @@ export class KycService {
         return this.responseService.badRequest('Invalid account number');
       }
 
-     
-
       await this.updateUser(user.id, {
-        accountNumber:bankDetails.accountNumber,
-        bankdetaislprovidedIsdone:true,
-        bankVerified:true,
-        kycCompletionStatus : { ...user.kycCompletionStatus, 'bankDetailsProvided': true },
-        updatedAt: new Date()
+        accountNumber: bankDetails.accountNumber,
+        bankdetaislprovidedIsdone: true,
+        bankVerified: true,
+        kycCompletionStatus: {
+          ...user.kycCompletionStatus,
+          bankDetailsProvided: true,
+        },
+        updatedAt: new Date(),
       });
-     
-
 
       await this.notificationService.create({
         message: `Hello ${user.firstName}, you have successfully updated your bank details.`,
@@ -436,27 +429,25 @@ export class KycService {
     user: UserEntity,
     nextofkinDetailsdto: NextOfKinDto,
   ): Promise<StandardResponse<UserEntity>> {
-    console.log("🚀 ~ KycService ~ user:", user)
+    console.log('🚀 ~ KycService ~ user:', user);
     try {
       // Map employment details to the user entity
-  
-
 
       await this.updateUser(user.id, {
-        nextOfKinMiddlename:nextofkinDetailsdto.nextOfKinMiddlename,
-        nextOfKinFirstname:nextofkinDetailsdto.nextOfKinFirstname,
-        nextOfKinGender:nextofkinDetailsdto.nextOfKinGender,
-        nextOfKinLastname:nextofkinDetailsdto.nextOfKinLastname,
-        nextOfKinEmail:nextofkinDetailsdto.nextOfKinEmail,
-        nextOfKinPhone:nextofkinDetailsdto.nextOfKinPhone,
-        nextOfkinRelationship:nextofkinDetailsdto.nextofkinRelationship,
-        kycCompletionStatus : { ...user.kycCompletionStatus, 'nextOfKinDetailsProvided': true },
-        nextofkinDetailsprovidedIsdone:true,
-        updatedAt: new Date()
+        nextOfKinMiddlename: nextofkinDetailsdto.nextOfKinMiddlename,
+        nextOfKinFirstname: nextofkinDetailsdto.nextOfKinFirstname,
+        nextOfKinGender: nextofkinDetailsdto.nextOfKinGender,
+        nextOfKinLastname: nextofkinDetailsdto.nextOfKinLastname,
+        nextOfKinEmail: nextofkinDetailsdto.nextOfKinEmail,
+        nextOfKinPhone: nextofkinDetailsdto.nextOfKinPhone,
+        nextOfkinRelationship: nextofkinDetailsdto.nextofkinRelationship,
+        kycCompletionStatus: {
+          ...user.kycCompletionStatus,
+          nextOfKinDetailsProvided: true,
+        },
+        nextofkinDetailsprovidedIsdone: true,
+        updatedAt: new Date(),
       });
-     
-
-
 
       await this.notificationService.create({
         message: `Hello ${user.firstName}, you have successfully updated next of kin details.`,
@@ -496,14 +487,15 @@ export class KycService {
       const { file: uploadedFile, uploadSignedUrl } =
         await this.filesS3PresignedService.create(fileUploadDto);
 
-
-       await this.updateUser(user.id, {
-        addressProofPath:uploadSignedUrl,
-        kycCompletionStatus : { ...user.kycCompletionStatus, 'addressProofProvided': true },
-        addressProofProvidedIsdone:true,
-        updatedAt: new Date()
+      await this.updateUser(user.id, {
+        addressProofPath: uploadSignedUrl,
+        kycCompletionStatus: {
+          ...user.kycCompletionStatus,
+          addressProofProvided: true,
+        },
+        addressProofProvidedIsdone: true,
+        updatedAt: new Date(),
       });
-      
 
       await this.notificationService.create({
         message: `Hello ${user.firstName}, you have successfully uploaded address proof.`,
@@ -534,18 +526,16 @@ export class KycService {
     taxDetails: TaxDetailsDto,
   ): Promise<StandardResponse<UserEntity>> {
     try {
-     
-
-
       await this.updateUser(user.id, {
-        taxLocation:taxDetails.taxLocation,
-        taxIdentityNumber:taxDetails.taxIdentityNumber,
-        kycCompletionStatus : { ...user.kycCompletionStatus, 'taxDetailsProvided': true },
-        taxdetailsprovidedIsdone:true,
-        updatedAt: new Date()
+        taxLocation: taxDetails.taxLocation,
+        taxIdentityNumber: taxDetails.taxIdentityNumber,
+        kycCompletionStatus: {
+          ...user.kycCompletionStatus,
+          taxDetailsProvided: true,
+        },
+        taxdetailsprovidedIsdone: true,
+        updatedAt: new Date(),
       });
-      
-     
 
       await this.notificationService.create({
         message: `Hello ${user.firstName}, you have successfully updated tax details.`,
@@ -569,7 +559,7 @@ export class KycService {
       );
     }
   }
-  
+
   // New method: Get KYC Progress
 
   async UpdateKycStatus(userId: number, isVerified: boolean): Promise<void> {
@@ -582,24 +572,28 @@ export class KycService {
     await this.userRepository.save(user);
   }
 
-  async getKycProgressNew(user: UserEntity): Promise<StandardResponse<{ steps: Record<string, boolean>, percentage: number }>> {
+  async getKycProgressNew(
+    user: UserEntity,
+  ): Promise<
+    StandardResponse<{ steps: Record<string, boolean>; percentage: number }>
+  > {
     try {
-      
-
       const kycSteps = {
-        governmentIdVerifiedIsdone: user.governmentIdVerifiedIsdone || false,
-        smartPhotographyIsdone: user.smartPhotographyIsdone || false,
-        signatureUploadedIsdone: user.signatureUploadedIsdone || false,
-        EPisdone: user.PEPisdone || false,
-        employmentdetailsProvidedIsdone: user.employmentdetailsProvidedIsdone || false,
-        bankdetaislprovidedIsdone: user.bankdetaislprovidedIsdone || false,
-        nextofkinDetailsprovidedIsdone: user.nextofkinDetailsprovidedIsdone || false,
-        addressProofProvidedIsdone: user.addressProofProvidedIsdone || false,
-        taxdetailsprovidedIsdone: user.taxdetailsprovidedIsdone || false,
-        registerAndVerifiedIsdone: user.registerAndVerifiedIsdone || false
+        governmentIdVerifiedIsdone: user.governmentIdVerifiedIsdone,
+        smartPhotographyIsdone: user.smartPhotographyIsdone,
+        signatureUploadedIsdone: user.signatureUploadedIsdone,
+        EPisdone: user.PEPisdone,
+        employmentdetailsProvidedIsdone: user.employmentdetailsProvidedIsdone,
+        bankdetaislprovidedIsdone: user.bankdetaislprovidedIsdone,
+        nextofkinDetailsprovidedIsdone: user.nextofkinDetailsprovidedIsdone,
+        addressProofProvidedIsdone: user.addressProofProvidedIsdone,
+        taxdetailsprovidedIsdone: user.taxdetailsprovidedIsdone,
+        registerAndVerifiedIsdone: user.registerAndVerifiedIsdone,
       };
 
-      const completedSteps = Object.values(kycSteps).filter(Boolean).length;
+      const completedSteps = Object.values(kycSteps).filter(
+        (step) => step,
+      ).length;
       const totalSteps = Object.keys(kycSteps).length;
       const percentage = (completedSteps / totalSteps) * 100;
 
@@ -607,12 +601,18 @@ export class KycService {
         'KYC progress retrieved successfully',
         {
           steps: kycSteps,
-          percentage: Math.round(percentage)
-        }
+          percentage: Math.round(percentage),
+        },
       );
     } catch (error) {
-      this.logger.error(`Error retrieving KYC progress for user ${user}`, error.stack);
-      return this.responseService.internalServerError('Error retrieving KYC progress', error);
+      this.logger.error(
+        `Error retrieving KYC progress for user ${user}`,
+        error.stack,
+      );
+      return this.responseService.internalServerError(
+        'Error retrieving KYC progress',
+        error,
+      );
     }
   }
 }
