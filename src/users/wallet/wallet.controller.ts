@@ -10,7 +10,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { WalletService } from './wallet.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../../roles/roles.guard';
@@ -30,7 +30,24 @@ import { WalletEntity } from '../infrastructure/persistence/relational/entities/
 export class WalletController {
   constructor(private readonly walletservice: WalletService) {}
 
+
   @Post('fund-account')
+  @ApiOkResponse({
+    schema:{
+        allOf:[
+            {
+                $ref:getSchemaPath(StandardResponse<WalletEntity>)
+            },
+            {
+                properties:{
+                    payload:{
+                        $ref:getSchemaPath(WalletEntity)
+                    }
+                }
+            }
+        ]
+    }
+  })
   async fundAccount(
     @Body() dto: WalletFundingDto,
     @Req() req,
@@ -39,6 +56,22 @@ export class WalletController {
   }
 
   @Post('withdraw-funds')
+  @ApiOkResponse({
+    schema:{
+        allOf:[
+            {
+                $ref:getSchemaPath(StandardResponse<WalletEntity>)
+            },
+            {
+                properties:{
+                    payload:{
+                        $ref:getSchemaPath(WalletEntity)
+                    }
+                }
+            }
+        ]
+    }
+  })
   async withdraw(
     @Body() dto: WalletWithdrawalDto,
     @Req() req,
@@ -47,6 +80,22 @@ export class WalletController {
   }
 
   @Post('add-card')
+  @ApiOkResponse({
+    schema:{
+        allOf:[
+            {
+                $ref:getSchemaPath(StandardResponse<CardEntity>)
+            },
+            {
+                properties:{
+                    payload:{
+                        $ref:getSchemaPath((CardEntity))
+                    }
+                }
+            }
+        ]
+    }
+  })
   async addCard(
     @Body() dto: CardDetailsDto,
     @Req() req,
@@ -55,6 +104,22 @@ export class WalletController {
   }
 
   @Delete('remove-card/:cardID')
+  @ApiOkResponse({
+    schema:{
+        allOf:[
+            {
+                $ref:getSchemaPath(StandardResponse<CardEntity>)
+            },
+            {
+                properties:{
+                    payload:{
+                        $ref:getSchemaPath(Boolean)
+                    }
+                }
+            }
+        ]
+    }
+  })
   async removeCard(
     @Req() req,
     @Param('cardID') cardID: number,
@@ -63,11 +128,43 @@ export class WalletController {
   }
 
   @Get('fetch-wallet-balance')
+  @ApiOkResponse({
+    schema:{
+        allOf:[
+            {
+                $ref:getSchemaPath(StandardResponse<WalletEntity>)
+            },
+            {
+                properties:{
+                    payload:{
+                        $ref:getSchemaPath(Number)
+                    }
+                }
+            }
+        ]
+    }
+  })
   async getWalletBalance(@Req() req): Promise<StandardResponse<number>> {
     return await this.walletservice.getWalletBalance(req.user);
   }
 
   @Get('get-saved-cards')
+  @ApiOkResponse({
+    schema:{
+        allOf:[
+            {
+                $ref:getSchemaPath(StandardResponse<CardEntity[]>)
+            },
+            {
+                properties:{
+                    payload:{
+                        $ref:getSchemaPath(CardEntity)
+                    }
+                }
+            }
+        ]
+    }
+  })
   async getSavedCards(@Req() req): Promise<StandardResponse<CardEntity[]>> {
     return await this.walletservice.getSavedCards(req.user);
   }

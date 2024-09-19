@@ -20,7 +20,9 @@ import {
   ApiBody,
   ApiConsumes,
   ApiCreatedResponse,
+  ApiOkResponse,
   ApiTags,
+  getSchemaPath,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../../roles/roles.guard';
@@ -101,30 +103,110 @@ export class KycController {
  
   @UseInterceptors(FileInterceptor('signature'))
   @Patch('upload-signature')
+  @ApiOkResponse({
+    schema:{
+        allOf:[
+            {
+                $ref:getSchemaPath(StandardResponse<UserEntity>)
+            },
+            {
+                properties:{
+                    payload:{
+                        $ref:getSchemaPath((UserEntity))
+                    }
+                }
+            }
+        ]
+    }
+  })
   async uploadSignature(@Req() req, @UploadedFile() file: Express.Multer.File):Promise<StandardResponse<UserEntity>> {
     return await this.kycService.confirmSignatureUpload(req.user, file);
   }
 
   
   @Patch('update-pep-details')
+  @ApiOkResponse({
+    schema:{
+        allOf:[
+            {
+                $ref:getSchemaPath(StandardResponse<UserEntity>)
+            },
+            {
+                properties:{
+                    payload:{
+                        $ref:getSchemaPath((UserEntity))
+                    }
+                }
+            }
+        ]
+    }
+  })
   async updatePepDetails(@Req() req, @Body() dto: PepDto):Promise<StandardResponse<UserEntity>> {
     return await this.kycService.updatePepDetails(req.user, dto);
   }
 
 
   @Patch('update-employment-details')
+  @ApiOkResponse({
+    schema:{
+        allOf:[
+            {
+                $ref:getSchemaPath(StandardResponse<UserEntity>)
+            },
+            {
+                properties:{
+                    payload:{
+                        $ref:getSchemaPath((UserEntity))
+                    }
+                }
+            }
+        ]
+    }
+  })
   async updateEmploymentDetails(@Req() req, @Body() dto: EmploymentDetailsDto) :Promise<StandardResponse<UserEntity>>{
     return await this.kycService.updateEmploymentDetails(req.user, dto);
   }
 
   
   @Patch('update-bank-details')
+  @ApiOkResponse({
+    schema:{
+        allOf:[
+            {
+                $ref:getSchemaPath(StandardResponse<UserEntity>)
+            },
+            {
+                properties:{
+                    payload:{
+                        $ref:getSchemaPath((UserEntity))
+                    }
+                }
+            }
+        ]
+    }
+  })
   async updateBankDetails(@Req() req, @Body() dto: BankDetailsDto):Promise<StandardResponse<UserEntity>> {
     return await this.kycService.updateBankDetails(req.user, dto);
   }
 
 
   @Patch('update-nextOfkin-details')
+  @ApiOkResponse({
+    schema:{
+        allOf:[
+            {
+                $ref:getSchemaPath(StandardResponse<UserEntity>)
+            },
+            {
+                properties:{
+                    payload:{
+                        $ref:getSchemaPath((UserEntity))
+                    }
+                }
+            }
+        ]
+    }
+  })
   async updateNextOfkin(@Req() req, @Body() dto: NextOfKinDto):Promise<StandardResponse<UserEntity>> {
     return await this.kycService.updateNextOfkin(req.user, dto);
   }
@@ -144,6 +226,22 @@ export class KycController {
  
   @UseInterceptors(FileInterceptor('addressProof'))
   @Patch('upload-proof-of-address')
+  @ApiOkResponse({
+    schema:{
+        allOf:[
+            {
+                $ref:getSchemaPath(StandardResponse<UserEntity>)
+            },
+            {
+                properties:{
+                    payload:{
+                        $ref:getSchemaPath((UserEntity))
+                    }
+                }
+            }
+        ]
+    }
+  })
   async uploadAddressProof(
     @Req() req,
     @UploadedFile() file: Express.Multer.File,
@@ -153,12 +251,44 @@ export class KycController {
 
   
   @Patch('update-tax-details')
+  @ApiOkResponse({
+    schema:{
+        allOf:[
+            {
+                $ref:getSchemaPath(StandardResponse<UserEntity>)
+            },
+            {
+                properties:{
+                    payload:{
+                        $ref:getSchemaPath((UserEntity))
+                    }
+                }
+            }
+        ]
+    }
+  })
   async updateTaxDetails(@Req() req, @Body() dto: TaxDetailsDto) :Promise<StandardResponse<UserEntity>>{
     return await this.kycService.updateTaxDetails(req.user, dto);
   }
 
  
     @Get('kyc-progress')
+    @ApiOkResponse({
+      schema:{
+          allOf:[
+              {
+                  $ref:getSchemaPath(StandardResponse<UserEntity>)
+              },
+              {
+                  properties:{
+                      payload:{
+                          $ref:getSchemaPath(Number)
+                      }
+                  }
+              }
+          ]
+      }
+    })
     async getkycProgress(@Req() req) :Promise<StandardResponse<number>>{
       return await this.kycService.getKycProgress(req.user);
     }
