@@ -430,7 +430,7 @@ export class AuthService {
         },
       );
 
-      console.log(hash)
+      console.log(hash);
       // Store the hash and expiration time in the user table
       user.resetPasswordHash = hash;
       user.resetPasswordExpires = new Date(tokenExpires);
@@ -479,12 +479,11 @@ export class AuthService {
       );
 
       // Update user's password and clear reset token fields
-       // Update user's password and clear reset token fields
-    await this.usersRepository.update(user.id, {
-      password: hashedPassword,
-      resetPasswordHash: '',
-      
-    });
+      // Update user's password and clear reset token fields
+      await this.usersRepository.update(user.id, {
+        password: hashedPassword,
+        resetPasswordHash: '',
+      });
 
       // Delete all sessions for this user
       await this.sessionService.deleteByUserId({
@@ -500,7 +499,7 @@ export class AuthService {
 
       return this.responseService.success('password reset successful', true);
     } catch (error) {
-      console.log(error) 
+      console.log(error);
       return this.responseService.internalServerError(
         'Error resetting password',
         error,

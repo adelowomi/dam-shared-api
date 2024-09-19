@@ -393,7 +393,7 @@ export class Mailer {
             <p class="message">Hi ${name},</p>
             <div class="instructions">
               <p>It seems like you requested to reset your password. Please click the button below to proceed with resetting your password:</p>
-              <a href="q1${resettoken}" class="reset-button">Reset Password</a>
+              <a href="${resettoken}" class="reset-button">Reset Password</a>
               <p>If you did not request this, please ignore this email.</p>
             </div>
             <div class="footer">
