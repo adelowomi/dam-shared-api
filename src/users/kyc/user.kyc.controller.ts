@@ -332,7 +332,11 @@ export class KycController {
       ],
     },
   })
-  async getkycProgress(@Req() req): Promise<StandardResponse<number>> {
-    return await this.kycService.getKycProgress(req.user);
+  async getkycProgress(
+    @Req() req,
+  ): Promise<
+    StandardResponse<{ steps: Record<string, boolean>; percentage: number }>
+  > {
+    return await this.kycService.getKycProgressNew(req.user);
   }
 }

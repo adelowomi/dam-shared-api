@@ -47,19 +47,8 @@ export class KycService {
     private responseService: ResponseService,
   ) {}
 
-  private async updateKycStatus(
-    user: UserEntity,
-    status: KycUpdates,
-  ): Promise<void> {
-    if (!user.kycCompletionStatus) {
-      user.kycCompletionStatus = {} as { [key in KycUpdates]: boolean };
-    }
-    user.kycCompletionStatus[status] = true;
-    user.updatedAt = new Date();
-    await this.userRepository.save(user);
-  }
+  
 
- 
 
   async getKycProgress(user: UserEntity): Promise<StandardResponse<number>> {
     try {
@@ -98,10 +87,7 @@ export class KycService {
     
   }
 
-  private async updateUser1(userId: number, updateData: Partial<UserEntity>): Promise<UserEntity|null> {
-    await this.userRepository.update(userId, updateData);
-    return this.userRepository.findOne({ where: { id: userId } });
-  }
+ 
   
   
 
@@ -160,10 +146,12 @@ export class KycService {
       );  
       console.log('🚀 ~ KycService ~ identifyID ~ response:', response);
 
-      const updatedUser = await this.updateUser(user.id, {
-        updatedAt: new Date()
+      await this.updateUser(user.id, {
+        updatedAt: new Date(),
+        governmentIdVerifiedIsdone:true,
+        kycCompletionStatus:{...user.kycCompletionStatus, 'governmentIdProvided':true}
       });
-      await this.updateKycStatus(user, KycUpdates.PEPupdated);
+      
 
      
 
@@ -218,11 +206,11 @@ export class KycService {
       console.log('Selfie job submitted:', response);
 
 
-        const updatedUser = await this.updateUser(user.id, {
-        updatedAt: new Date()
+      await this.updateUser(user.id, {
+        updatedAt: new Date(),
+        smartPhotographyIsdone:true,
+        kycCompletionStatus:{...user.kycCompletionStatus, 'selfieVerificationInitiated':true}
       });
-      await this.updateKycStatus(user, KycUpdates.selfieVerificationInitiated);
-
       // Send a notification to the user about the initiation of the selfie KYC process
       await this.notificationService.create({
         message: `Hello ${user.firstName}, you have initiated the selfie KYC process.`,
@@ -266,10 +254,12 @@ export class KycService {
 
 
       
-        user.signatureImagePath=uploadSignedUrl,
-        user.updatedAt= new Date()
-      
-      await this.updateKycStatus(user, KycUpdates.signatureUploaded);
+        await this.updateUser(user.id, {
+          updatedAt: new Date(),
+          signatureUploadedIsdone:true,
+          signatureImagePath:uploadSignedUrl,
+          kycCompletionStatus:{...user.kycCompletionStatus, 'signatureUploaded':true}
+        });
 
       await this.userRepository.save(user)
 
@@ -308,7 +298,7 @@ export class KycService {
 
        await this.updateUser(user.id,{
         PEP:dto.PEP,
-        kycCompletionStatus : { ...user.kycCompletionStatus, 'PEPupdated': true },
+        PEPisdone:true,
         updatedAt:new Date()
 
        })
@@ -358,6 +348,7 @@ export class KycService {
         investmentSource:employmentDetails.investmentSource,
         otherInvestmentSource:employmentDetails.otherInvestmentSource,
         kycCompletionStatus : { ...user.kycCompletionStatus, 'employmentDetailsProvided': true },
+        employmentdetailsProvidedIsdone:true,
         updatedAt: new Date()
       });
       
@@ -409,6 +400,7 @@ export class KycService {
 
       await this.updateUser(user.id, {
         accountNumber:bankDetails.accountNumber,
+        bankdetaislprovidedIsdone:true,
         bankVerified:true,
         kycCompletionStatus : { ...user.kycCompletionStatus, 'bankDetailsProvided': true },
         updatedAt: new Date()
@@ -459,6 +451,7 @@ export class KycService {
         nextOfKinPhone:nextofkinDetailsdto.nextOfKinPhone,
         nextOfkinRelationship:nextofkinDetailsdto.nextofkinRelationship,
         kycCompletionStatus : { ...user.kycCompletionStatus, 'nextOfKinDetailsProvided': true },
+        nextofkinDetailsprovidedIsdone:true,
         updatedAt: new Date()
       });
      
@@ -507,6 +500,7 @@ export class KycService {
        await this.updateUser(user.id, {
         addressProofPath:uploadSignedUrl,
         kycCompletionStatus : { ...user.kycCompletionStatus, 'addressProofProvided': true },
+        addressProofProvidedIsdone:true,
         updatedAt: new Date()
       });
       
@@ -547,6 +541,7 @@ export class KycService {
         taxLocation:taxDetails.taxLocation,
         taxIdentityNumber:taxDetails.taxIdentityNumber,
         kycCompletionStatus : { ...user.kycCompletionStatus, 'taxDetailsProvided': true },
+        taxdetailsprovidedIsdone:true,
         updatedAt: new Date()
       });
       
@@ -585,5 +580,39 @@ export class KycService {
 
     //user.passportPhotographVerificationInitiated = isVerified; // Assuming you have a column like this in your User entity
     await this.userRepository.save(user);
+  }
+
+  async getKycProgressNew(user: UserEntity): Promise<StandardResponse<{ steps: Record<string, boolean>, percentage: number }>> {
+    try {
+      
+
+      const kycSteps = {
+        governmentIdVerifiedIsdone: user.governmentIdVerifiedIsdone || false,
+        smartPhotographyIsdone: user.smartPhotographyIsdone || false,
+        signatureUploadedIsdone: user.signatureUploadedIsdone || false,
+        EPisdone: user.PEPisdone || false,
+        employmentdetailsProvidedIsdone: user.employmentdetailsProvidedIsdone || false,
+        bankdetaislprovidedIsdone: user.bankdetaislprovidedIsdone || false,
+        nextofkinDetailsprovidedIsdone: user.nextofkinDetailsprovidedIsdone || false,
+        addressProofProvidedIsdone: user.addressProofProvidedIsdone || false,
+        taxdetailsprovidedIsdone: user.taxdetailsprovidedIsdone || false,
+        registerAndVerifiedIsdone: user.registerAndVerifiedIsdone || false
+      };
+
+      const completedSteps = Object.values(kycSteps).filter(Boolean).length;
+      const totalSteps = Object.keys(kycSteps).length;
+      const percentage = (completedSteps / totalSteps) * 100;
+
+      return this.responseService.success(
+        'KYC progress retrieved successfully',
+        {
+          steps: kycSteps,
+          percentage: Math.round(percentage)
+        }
+      );
+    } catch (error) {
+      this.logger.error(`Error retrieving KYC progress for user ${user}`, error.stack);
+      return this.responseService.internalServerError('Error retrieving KYC progress', error);
+    }
   }
 }
