@@ -540,10 +540,7 @@ export class KycService {
     taxDetails: TaxDetailsDto,
   ): Promise<StandardResponse<UserEntity>> {
     try {
-      Object.assign(user, {
-        taxLocation: taxDetails.taxLocation,
-        taxIdentityNumber: taxDetails.taxIdentityNumber,
-      });
+     
 
 
       await this.updateUser(user.id, {
@@ -577,7 +574,7 @@ export class KycService {
       );
     }
   }
-
+  
   // New method: Get KYC Progress
 
   async UpdateKycStatus(userId: number, isVerified: boolean): Promise<void> {
