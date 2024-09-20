@@ -32,6 +32,10 @@ import {
   ResponseService,
   StandardResponse,
 } from '../../utils/services/response.service';
+import { PersnalIdVerificationModel } from '../dto/personal-id';
+import { SmileJobWebHookDto } from '../dto/smile-webhook.dto';
+import { CreateVerificationLinkModel } from '../../utils/services/models/create-verification-link-model';
+import { SmileLinksEntity } from '../infrastructure/persistence/relational/entities/smilelinks.entity';
 
 @Injectable()
 export class KycService {
@@ -45,6 +49,8 @@ export class KycService {
     private readonly smileService: SmileService,
     private readonly filesS3PresignedService: FilesS3PresignedService,
     private responseService: ResponseService,
+    @InjectRepository(SmileLinksEntity)
+    private readonly smileLinkRepository: Repository<SmileLinksEntity>,
   ) {}
 
   async getKycProgress(user: UserEntity): Promise<StandardResponse<number>> {
@@ -623,6 +629,127 @@ export class KycService {
       );
       return this.responseService.internalServerError(
         'Error retrieving KYC progress',
+        error,
+      );
+    }
+  }
+
+  async personalIdVerification({
+    images,
+    partner_params,
+  }: PersnalIdVerificationModel): Promise<any> {
+    console.log('🚀 ~ KycService ~ partner_params:', partner_params);
+    console.log('🚀 ~ KycService ~ images:', images);
+    try {
+      // Submit the selfie for KYC verification
+      const response =
+        await this.smileService.selfieAndImageIdentityVerification({
+          images,
+          partner_params,
+        });
+      console.log('Selfie job submitted:', response);
+      return this.responseService.success(
+        'smart selfie successfully initiated',
+        {
+          response,
+        },
+      );
+    } catch (error) {
+      console.error('Failed to submit selfie for verification:', error.stack);
+      return this.responseService.internalServerError(
+        'Error initializing smart selfie',
+        error,
+      );
+    }
+  }
+  async smileWebhook(data: SmileJobWebHookDto): Promise<any> {
+    console.log('🚀 ~ KycService ~ smileWebhook ~ data:', data);
+    console.log('🚀 ~ KycService ~ smileWebhook ~ data:', data.PartnerParams);
+
+    const linkId = data.PartnerParams.link_id;
+    const userId = data.PartnerParams.user_id.split(
+      '__',
+    )[0] as unknown as number;
+
+    const smileLink = await this.smileLinkRepository.findOne({
+      where: { user_id: userId, link_id: linkId },
+    });
+
+    if (!smileLink) {
+      return this.responseService.badRequest('Invalid Smile Link');
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return this.responseService.notFound('User not found');
+    }
+
+    user.smartPhotographyIsdone = true;
+    user.kycCompletionStatus = {
+      ...user.kycCompletionStatus,
+      selfieVerificationInitiated: true,
+    };
+
+    await this.userRepository.save(user);
+
+    return data;
+  }
+
+  async initiateSMileIdLinkVerification(
+    user: UserEntity,
+  ): Promise<StandardResponse<string>> {
+    try {
+      const thisUser = await this.userRepository.findOne({
+        where: { id: user.id },
+      });
+
+      if (!thisUser) return this.responseService.notFound('User not found');
+      const ref_id = uuidv4();
+
+      const model = {
+        user_id: `${user.id}__${ref_id}`,
+      };
+
+      const response = await this.smileService.createSmileLink({
+        model: model as CreateVerificationLinkModel,
+      });
+
+      if (!response.success) {
+        console.log('🚀 ~ KycService ~ response:', response);
+        return this.responseService.badRequest(
+          response.error || 'Error initiating smile link verification',
+        );
+      }
+
+      console.log('🚀 ~ KycService ~ response:', response);
+      const linkId = response.link.split('/').pop();
+
+      const smileLinkEntity = this.smileLinkRepository.create({
+        user_id: user.id,
+        email: thisUser?.email,
+        created_at: new Date(),
+        ref_id: ref_id,
+        link: response.link,
+        link_id: linkId,
+      });
+
+      await this.smileLinkRepository.save(smileLinkEntity);
+
+      return this.responseService.success(
+        'smile link verification initiated successfully',
+        response.link,
+      );
+    } catch (error) {
+      console.log('🚀 ~ KycService ~ error:', error);
+      this.logger.error(
+        `Error initiating smile link verification for user ${user.id}`,
+        error.stack,
+      );
+      return this.responseService.internalServerError(
+        'Error initiating smile link verification',
         error,
       );
     }

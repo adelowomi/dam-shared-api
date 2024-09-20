@@ -10,6 +10,7 @@ import { WalletEntity } from '../users/infrastructure/persistence/relational/ent
 import { CardEntity } from '../users/infrastructure/persistence/relational/entities/card.entity';
 import { FileEntity } from '../files/infrastructure/persistence/relational/entities/file.entity';
 import { SessionEntity } from '../session/infrastructure/persistence/relational/entities/session.entity';
+import { SmileLinksEntity } from '../users/infrastructure/persistence/relational/entities/smilelinks.entity';
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
@@ -31,7 +32,17 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
       keepConnectionAlive: true,
       logging:
         this.configService.get('app.nodeEnv', { infer: true }) !== 'production',
-        entities: [UserEntity,NotificationsEntity,TransactionEntity,AuthOtpEntity,WalletEntity,CardEntity,FileEntity,SessionEntity],
+      entities: [
+        UserEntity,
+        NotificationsEntity,
+        TransactionEntity,
+        AuthOtpEntity,
+        WalletEntity,
+        CardEntity,
+        FileEntity,
+        SessionEntity,
+        SmileLinksEntity,
+      ],
       migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
       cli: {
         entitiesDir: 'src',

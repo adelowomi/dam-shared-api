@@ -28,10 +28,26 @@ import { ResponseService } from '../utils/services/response.service';
     SessionModule,
     PassportModule,
     JwtModule.register({}),
-    TypeOrmModule.forFeature([UserEntity,NotificationsEntity,AuthOtpEntity,WalletEntity])
+    TypeOrmModule.forFeature([
+      UserEntity,
+      NotificationsEntity,
+      AuthOtpEntity,
+      WalletEntity,
+    ]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtRefreshStrategy, UserService,AnonymousStrategy,NotificationsService,Mailer,SessionService,JwtService,ResponseService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    JwtRefreshStrategy,
+    UserService,
+    AnonymousStrategy,
+    NotificationsService,
+    Mailer,
+    SessionService,
+    JwtService,
+    ResponseService,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

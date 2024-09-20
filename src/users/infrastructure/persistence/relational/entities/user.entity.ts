@@ -121,21 +121,21 @@ export class UserEntity extends EntityRelationalHelper {
   photo?: FileEntity | null;
 
   @ApiProperty({ enum: RoleEnum })
-  @Column({ type: 'enum', enum: RoleEnum ,nullable:true})
+  @Column({ type: 'enum', enum: RoleEnum, nullable: true })
   role: RoleEnum;
 
   @ApiProperty({ enum: StatusEnum })
-  @Column({ type: 'enum', enum: StatusEnum, nullable:true })
+  @Column({ type: 'enum', enum: StatusEnum, nullable: true })
   status?: StatusEnum;
 
   @ApiProperty()
   @Index()
-  @Column({ type: 'boolean' ,nullable:true})
+  @Column({ type: 'boolean', nullable: true })
   PEP: boolean;
 
   @ApiProperty()
   @Index()
-  @Column({ type: 'boolean' ,nullable:true})
+  @Column({ type: 'boolean', nullable: true })
   PEPisdone: boolean;
 
   @ApiProperty({ type: String })
@@ -145,7 +145,7 @@ export class UserEntity extends EntityRelationalHelper {
 
   @ApiProperty()
   @Index()
-  @Column({ type: 'boolean' ,nullable:true})
+  @Column({ type: 'boolean', nullable: true })
   employmentStatusIsdone: boolean;
 
   @ApiProperty({ type: String })
@@ -160,14 +160,13 @@ export class UserEntity extends EntityRelationalHelper {
 
   @ApiProperty()
   @Index()
-  @Column({ type: 'boolean' ,nullable:true})
+  @Column({ type: 'boolean', nullable: true })
   bankdetaislprovidedIsdone: boolean;
 
-
-  @ApiProperty({ type: Boolean})
+  @ApiProperty({ type: Boolean })
   @Index()
-  @Column({type:'boolean', nullable: true , default:false})
-  bankVerified:boolean
+  @Column({ type: 'boolean', nullable: true, default: false })
+  bankVerified: boolean;
 
   @ApiProperty({ type: String })
   @Index()
@@ -181,7 +180,7 @@ export class UserEntity extends EntityRelationalHelper {
 
   @ApiProperty()
   @Index()
-  @Column({ type: 'boolean' ,nullable:true})
+  @Column({ type: 'boolean', nullable: true })
   taxdetailsprovidedIsdone: boolean;
 
   @ApiProperty({ type: String })
@@ -221,7 +220,7 @@ export class UserEntity extends EntityRelationalHelper {
 
   @ApiProperty()
   @Index()
-  @Column({ type: 'boolean' ,nullable:true})
+  @Column({ type: 'boolean', nullable: true })
   employmentdetailsProvidedIsdone: boolean;
 
   @ApiProperty({ type: String, example: 'judy' })
@@ -266,7 +265,7 @@ export class UserEntity extends EntityRelationalHelper {
 
   @ApiProperty()
   @Index()
-  @Column({ type: 'boolean' ,nullable:true})
+  @Column({ type: 'boolean', nullable: true })
   nextofkinDetailsprovidedIsdone: boolean;
 
   @ApiProperty({ type: String })
@@ -276,43 +275,38 @@ export class UserEntity extends EntityRelationalHelper {
 
   @ApiProperty()
   @Index()
-  @Column({ type: 'boolean' ,nullable:true})
+  @Column({ type: 'boolean', nullable: true })
   addressProofProvidedIsdone: boolean;
 
   @ApiProperty()
   @Index()
-  @Column({ type: 'boolean' ,nullable:true})
+  @Column({ type: 'boolean', nullable: true })
   governmentIdVerifiedIsdone: boolean;
 
   @ApiProperty()
   @Index()
-  @Column({ type: 'boolean' ,nullable:true})
+  @Column({ type: 'boolean', nullable: true })
   smartPhotographyIsdone: boolean;
 
   @ApiProperty()
   @Index()
-  @Column({ type: 'boolean' ,nullable:true})
+  @Column({ type: 'boolean', nullable: true })
   signatureUploadedIsdone: boolean;
 
   @ApiProperty()
   @Index()
-  @Column({ type: 'boolean' ,nullable:true})
+  @Column({ type: 'boolean', nullable: true })
   registerAndVerifiedIsdone: boolean;
-
-
-
 
   @ApiProperty()
   @Index()
-  @Column("jsonb", { nullable: false, default: '{}' })
+  @Column('jsonb', { nullable: false, default: '{}' })
   kycCompletionStatus: { [key in KycUpdates]: boolean };
 
   @ApiProperty()
   @Index()
   @Column({ type: 'boolean', default: false })
   zanibarAccountCreated: boolean;
-
-
 
   @ApiProperty()
   @Index()
@@ -325,39 +319,35 @@ export class UserEntity extends EntityRelationalHelper {
   signatureImagePath: string;
 
   @ApiProperty()
-  @Column({ type: 'timestamp', nullable:true })
+  @Column({ type: 'timestamp', nullable: true })
   createdAt: Date;
 
   @ApiProperty()
-  @Column({ type: 'timestamp' , nullable:true})
+  @Column({ type: 'timestamp', nullable: true })
   updatedAt: Date;
 
   @ApiProperty()
-  @Column({ type: 'timestamp', nullable:true })
+  @Column({ type: 'timestamp', nullable: true })
   deletedAt: Date;
 
-  @ApiProperty({type:()=> TransactionEntity})
-  @OneToMany(() => TransactionEntity, transaction => transaction.user)
+  @ApiProperty({ type: () => TransactionEntity })
+  @OneToMany(() => TransactionEntity, (transaction) => transaction.user)
   my_transactions: TransactionEntity[];
 
-  @ApiProperty({type:()=> CardEntity})
-  @OneToMany(() => CardEntity, cards => cards.user)
+  @ApiProperty({ type: () => CardEntity })
+  @OneToMany(() => CardEntity, (cards) => cards.user)
   my_cards: CardEntity[];
 
-  @OneToMany(() => WalletEntity, wallet => wallet.owner)
+  @OneToMany(() => WalletEntity, (wallet) => wallet.owner)
   my_wallet: WalletEntity;
 
-
-
+  @ApiProperty()
+  @Column({ nullable: true })
+  resetPasswordHash: string;
 
   @ApiProperty()
-  @Column({ nullable:true})
-  resetPasswordHash:string
-
-  @ApiProperty()
-  @Column({ type: 'timestamp' , nullable:true})
-  resetPasswordExpires:Date 
-
+  @Column({ type: 'timestamp', nullable: true })
+  resetPasswordExpires: Date;
 }
 
 // adelowo ajibola

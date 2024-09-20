@@ -21,6 +21,7 @@ import { SessionModule } from './session/session.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { NotificationsModule } from './notifications/notification.module';
 import { PaymentGatewayModule } from './payment/payment.module';
+import { FetchModule } from 'nestjs-fetch';
 
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
   useClass: TypeOrmConfigService,
@@ -67,18 +68,18 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     NotificationsModule,
     PaymentGatewayModule,
     MailerModule.forRoot({
-      transport:{
-        service:"gmail",
-        host:"smtp.gmail.com",
-        port:587,
+      transport: {
+        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 587,
         secure: true,
         auth: {
           user: process.env.AUTH_EMAIL,
-          pass:process.env.AUTH_PASS
+          pass: process.env.AUTH_PASS,
         },
-      
-      }
+      },
     }),
+    FetchModule,
     HomeModule,
   ],
 })

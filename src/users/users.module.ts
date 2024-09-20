@@ -22,18 +22,25 @@ import { WalletController } from './wallet/wallet.controller';
 import { Mailer } from '../mail/mail.service';
 import { FilesS3PresignedService } from '../files/infrastructure/uploader/s3-presigned/files.service';
 import { ResponseService } from '../utils/services/response.service';
+import { AnonymousStrategy } from '../auth/strategies/anonymous.strategy';
+import { PassportModule } from '@nestjs/passport';
+import { SmileLinksEntity } from './infrastructure/persistence/relational/entities/smilelinks.entity';
+import { FetchModule } from 'nestjs-fetch';
 
 //const infrastructurePersistenceModule = RelationalUserPersistenceModule;
 
 @Module({
   imports: [
     FilesModule,
+    PassportModule,
     TypeOrmModule.forFeature([
       UserEntity,
       AuthOtpEntity,
       NotificationsEntity,
       WalletEntity,
+      SmileLinksEntity,
     ]),
+    FetchModule,
   ],
   controllers: [UsersController, KycController, WalletController],
   providers: [
@@ -48,6 +55,7 @@ import { ResponseService } from '../utils/services/response.service';
     WalletService,
     Mailer,
     ResponseService,
+    AnonymousStrategy,
   ],
   exports: [UserService],
 })

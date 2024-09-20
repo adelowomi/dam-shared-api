@@ -14,6 +14,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+console.log('🚀 ~ Req:', Req);
 import { KycService } from './user.kyc.service';
 import {
   ApiBearerAuth,
@@ -37,9 +38,10 @@ import { NigerianIdDto } from '../dto/nigerianid.dto';
 import { NextOfKinDto } from '../dto/next-of-kin.dto';
 import { TaxDetailsDto } from '../dto/tax-details.dto';
 import { StandardResponse } from '../../utils/services/response.service';
+import { PersnalIdVerificationModel } from '../dto/personal-id';
+import { SmileJobWebHookDto } from '../dto/smile-webhook.dto';
 
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
 @ApiTags('KYC')
 @Controller({
   path: 'kyc',
@@ -49,6 +51,7 @@ export class KycController {
   constructor(private readonly kycService: KycService) {}
 
   @Post('initiatiate-nationalId-verification')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -57,9 +60,7 @@ export class KycController {
         },
         {
           properties: {
-            payload: {
-              $ref: getSchemaPath(Boolean),
-            },
+            payload: {},
           },
         },
       ],
@@ -73,6 +74,7 @@ export class KycController {
   }
 
   @Patch('proof-of-life-verification')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -81,9 +83,7 @@ export class KycController {
         },
         {
           properties: {
-            payload: {
-              $ref: getSchemaPath(Boolean),
-            },
+            payload: {},
           },
         },
       ],
@@ -122,6 +122,7 @@ export class KycController {
   }
 
   @ApiConsumes('multipart/form-data')
+  @UseGuards(AuthGuard('jwt'))
   @ApiBody({
     schema: {
       type: 'object',
@@ -134,6 +135,7 @@ export class KycController {
     },
   })
   @UseInterceptors(FileInterceptor('signature'))
+  @UseGuards(AuthGuard('jwt'))
   @Patch('upload-signature')
   @ApiOkResponse({
     schema: {
@@ -159,6 +161,7 @@ export class KycController {
   }
 
   @Patch('update-pep-details')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -175,6 +178,7 @@ export class KycController {
       ],
     },
   })
+  @UseGuards(AuthGuard('jwt'))
   async updatePepDetails(
     @Req() req,
     @Body() dto: PepDto,
@@ -183,6 +187,7 @@ export class KycController {
   }
 
   @Patch('update-employment-details')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -207,6 +212,7 @@ export class KycController {
   }
 
   @Patch('update-bank-details')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -267,6 +273,7 @@ export class KycController {
     },
   })
   @UseInterceptors(FileInterceptor('addressProof'))
+  @UseGuards(AuthGuard('jwt'))
   @Patch('upload-proof-of-address')
   @ApiOkResponse({
     schema: {
@@ -292,6 +299,7 @@ export class KycController {
   }
 
   @Patch('update-tax-details')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -316,6 +324,7 @@ export class KycController {
   }
 
   @Get('kyc-progress')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -324,9 +333,7 @@ export class KycController {
         },
         {
           properties: {
-            payload: {
-              $ref: getSchemaPath(Number),
-            },
+            payload: {},
           },
         },
       ],
@@ -338,5 +345,58 @@ export class KycController {
     StandardResponse<{ steps: Record<string, boolean>; percentage: number }>
   > {
     return await this.kycService.getKycProgressNew(req.user);
+  }
+
+  @Post('initiate-personal-id-verification')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        {
+          $ref: getSchemaPath(StandardResponse<any>),
+        },
+        {
+          properties: {
+            payload: {},
+          },
+        },
+      ],
+    },
+  })
+  async initiatePersonalIdVerification(
+    @Req() req,
+  ): Promise<StandardResponse<any>> {
+    return await this.kycService.personalIdVerification({
+      images: req.body.images,
+      partner_params: req.body.partner_params,
+    });
+  }
+
+  @Post('smile-webhook')
+  @UseGuards(AuthGuard('anonymous'))
+  public smileWebhook(@Req() req, @Body() dto: SmileJobWebHookDto) {
+    console.log('🚀 ~ KycController ~ smileWebhook ~ req:', req.body);
+
+    return this.kycService.smileWebhook(req.body);
+  }
+
+  @Post('initiate-verification')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        {
+          $ref: getSchemaPath(StandardResponse<any>),
+        },
+        {
+          properties: {
+            payload: {},
+          },
+        },
+      ],
+    },
+  })
+  async initiateVerification(@Req() req): Promise<StandardResponse<any>> {
+    return await this.kycService.initiateSMileIdLinkVerification(req.user);
   }
 }
