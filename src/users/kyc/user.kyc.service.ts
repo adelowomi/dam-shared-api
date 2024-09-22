@@ -721,7 +721,7 @@ export class KycService {
         model: model as CreateVerificationLinkModel,
       });
 
-      if (!response.success) {
+      if (!response.success || !response.link) {
         console.log('🚀 ~ KycService ~ response:', response);
         return this.responseService.badRequest(
           response.error || 'Error initiating smile link verification',
