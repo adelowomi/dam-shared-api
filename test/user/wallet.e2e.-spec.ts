@@ -1,9 +1,5 @@
 import request from 'supertest';
-import {
-  APP_URL,
-  TESTER_EMAIL,
-  TESTER_PASSWORD,
-} from '../utils/constants';
+import { APP_URL, TESTER_EMAIL, TESTER_PASSWORD } from '../utils/constants';
 
 import { SmileService } from '../../src/utils/services/smileID.service';
 import { PaymentGatewayService } from '../../src/payment/payment.service';
@@ -28,7 +24,9 @@ describe('Wallet Module', () => {
   describe('Fund Account', () => {
     it('should fund account: /api/v1/wallet/fund-account (POST)', async () => {
       const fundingDto = { amount: 1000 };
-      (PaymentGatewayService.prototype.processPayment as jest.Mock).mockResolvedValue({ success: true });
+      (
+        PaymentGatewayService.prototype.processPayment as jest.Mock
+      ).mockResolvedValue({ success: true });
 
       return request(app)
         .post('/api/v1/wallet/fund-account')
@@ -44,9 +42,17 @@ describe('Wallet Module', () => {
 
   describe('Withdraw Funds', () => {
     it('should withdraw funds: /api/v1/wallet/withdraw-funds (POST)', async () => {
-      const withdrawalDto = { amount: 500, accountNumber: '1234567890', bankName: 'Test Bank' };
-      (SmileService.prototype.verifyBankAccount as jest.Mock).mockResolvedValue(true);
-      (PaymentGatewayService.prototype.processWithdrawal as jest.Mock).mockResolvedValue({ success: true });
+      const withdrawalDto = {
+        amount: 500,
+        accountNumber: '1234567890',
+        bankName: 'Test Bank',
+      };
+      (SmileService.prototype.verifyBankAccount as jest.Mock).mockResolvedValue(
+        true,
+      );
+      (
+        PaymentGatewayService.prototype.processWithdrawal as jest.Mock
+      ).mockResolvedValue({ success: true });
 
       return request(app)
         .post('/api/v1/wallet/withdraw-funds')
@@ -63,7 +69,9 @@ describe('Wallet Module', () => {
   describe('Add Card', () => {
     it('should add a card: /api/v1/wallet/add-card (POST)', async () => {
       const cardDto = { cardDigits: '4111111111111111' };
-      (PaymentGatewayService.prototype.tokenizeCard as jest.Mock).mockResolvedValue({
+      (
+        PaymentGatewayService.prototype.tokenizeCard as jest.Mock
+      ).mockResolvedValue({
         token: 'mock-token',
         last4Digits: '1111',
         expiryMonth: '12',

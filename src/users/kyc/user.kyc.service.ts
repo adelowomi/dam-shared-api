@@ -1,31 +1,22 @@
 import {
   Injectable,
   HttpStatus,
-  UnprocessableEntityException,
   NotFoundException,
-  InternalServerErrorException,
   Logger,
-  BadRequestException,
-  PayloadTooLargeException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { ZanzibarService } from '../../utils/services/zanibar.service';
 import { SmileService } from '../../utils/services/smileID.service';
-import { FilesS3Service } from '../../files/infrastructure/uploader/s3/files.service';
 import { UserEntity } from '../infrastructure/persistence/relational/entities/user.entity';
 import { PepDto } from '../dto/KEP.dto';
 import { EmploymentDetailsDto } from '../dto/employment-details.dto';
 import { NextOfKinDto } from '../dto/next-of-kin.dto';
 import { BankDetailsDto } from '../dto/bankdetails.dto';
-import { AddressProofDto } from '../dto/address-proof.dto';
-import { GovernmentIdDto } from '../dto/goverenment-id.dto';
 import { TaxDetailsDto } from '../dto/tax-details.dto';
-import { User } from '../domain/user';
 import { NigerianIdDto, NigerianIdEnum } from '../dto/nigerianid.dto';
 import { v4 as uuidv4 } from 'uuid';
-import { FileUploadDto } from '../../files/infrastructure/uploader/s3-presigned/dto/file.dto';
 import { FilesS3PresignedService } from '../../files/infrastructure/uploader/s3-presigned/files.service';
 import { KycUpdates } from './kyc.enum';
 import {
@@ -36,6 +27,12 @@ import { PersnalIdVerificationModel } from '../dto/personal-id';
 import { SmileJobWebHookDto } from '../dto/smile-webhook.dto';
 import { CreateVerificationLinkModel } from '../../utils/services/models/create-verification-link-model';
 import { SmileLinksEntity } from '../infrastructure/persistence/relational/entities/smilelinks.entity';
+import { EmploymentDetailsEntity } from '../infrastructure/persistence/relational/entities/employmentDetails.entity';
+import { BankDetailsEntity } from '../infrastructure/persistence/relational/entities/bankDetails.entity';
+import { TaxDetailsEntity } from '../infrastructure/persistence/relational/entities/taxDetails.entity';
+import { NoxtOfKinEntity } from '../infrastructure/persistence/relational/entities/noxtOfKin.entity';
+import { PayStackService } from '../../utils/services/paystack.service';
+import { ResolveBankAccountResponse } from '../../utils/services/models/PayStaackStandardResponse';
 
 @Injectable()
 export class KycService {
@@ -51,6 +48,15 @@ export class KycService {
     private responseService: ResponseService,
     @InjectRepository(SmileLinksEntity)
     private readonly smileLinkRepository: Repository<SmileLinksEntity>,
+    @InjectRepository(EmploymentDetailsEntity)
+    private readonly employmentDetailsRepository: Repository<EmploymentDetailsEntity>,
+    @InjectRepository(BankDetailsEntity)
+    private readonly bankDetailsRepository: Repository<BankDetailsEntity>,
+    @InjectRepository(TaxDetailsEntity)
+    private readonly taxDetailsRepository: Repository<TaxDetailsEntity>,
+    @InjectRepository(NoxtOfKinEntity)
+    private readonly noxtOfKinRepository: Repository<NoxtOfKinEntity>,
+    private readonly payStackService: PayStackService,
   ) {}
 
   async getKycProgress(user: UserEntity): Promise<StandardResponse<number>> {
@@ -337,7 +343,7 @@ export class KycService {
     try {
       // Map employment details to the user entity
 
-      await this.updateUser(user.id, {
+      const employeeDetails = {
         employmentStatus: employmentDetails.employmentStatus,
         companyName: employmentDetails.companyName,
         jobTitle: employmentDetails.jobTitle,
@@ -346,10 +352,12 @@ export class KycService {
         incomeBand: employmentDetails.incomeBand,
         investmentSource: employmentDetails.investmentSource,
         otherInvestmentSource: employmentDetails.otherInvestmentSource,
-        kycCompletionStatus: {
-          ...user.kycCompletionStatus,
-          employmentDetailsProvided: true,
-        },
+        userId: user.id,
+      };
+
+      await this.employmentDetailsRepository.save(employeeDetails);
+
+      await this.updateUser(user.id, {
         employmentdetailsProvidedIsdone: true,
         updatedAt: new Date(),
       });
@@ -386,24 +394,18 @@ export class KycService {
     bankDetails: BankDetailsDto,
   ): Promise<StandardResponse<UserEntity>> {
     try {
-      const isValid = await this.smileService.performBankVerification(
-        user.id.toString(),
-        bankDetails.accountNumber,
-        bankDetails.bankcode,
-      );
+      const bankDetailsEmtity = {
+        accountNumber: bankDetails.accountNumber,
+        bankcode: bankDetails.bankcode,
+        userId: user.id,
+        bankVerified: true,
+      };
 
-      if (!isValid) {
-        return this.responseService.badRequest('Invalid account number');
-      }
+      await this.bankDetailsRepository.save(bankDetailsEmtity);
 
       await this.updateUser(user.id, {
-        accountNumber: bankDetails.accountNumber,
         bankdetaislprovidedIsdone: true,
         bankVerified: true,
-        kycCompletionStatus: {
-          ...user.kycCompletionStatus,
-          bankDetailsProvided: true,
-        },
         updatedAt: new Date(),
       });
 
@@ -439,7 +441,7 @@ export class KycService {
     try {
       // Map employment details to the user entity
 
-      await this.updateUser(user.id, {
+      const nextOfKinEntity = {
         nextOfKinMiddlename: nextofkinDetailsdto.nextOfKinMiddlename,
         nextOfKinFirstname: nextofkinDetailsdto.nextOfKinFirstname,
         nextOfKinGender: nextofkinDetailsdto.nextOfKinGender,
@@ -447,10 +449,12 @@ export class KycService {
         nextOfKinEmail: nextofkinDetailsdto.nextOfKinEmail,
         nextOfKinPhone: nextofkinDetailsdto.nextOfKinPhone,
         nextOfkinRelationship: nextofkinDetailsdto.nextofkinRelationship,
-        kycCompletionStatus: {
-          ...user.kycCompletionStatus,
-          nextOfKinDetailsProvided: true,
-        },
+        userId: user.id,
+      };
+
+      await this.noxtOfKinRepository.save(nextOfKinEntity);
+
+      await this.updateUser(user.id, {
         nextofkinDetailsprovidedIsdone: true,
         updatedAt: new Date(),
       });
@@ -568,7 +572,7 @@ export class KycService {
 
   // New method: Get KYC Progress
 
-  async UpdateKycStatus(userId: number, isVerified: boolean): Promise<void> {
+  async UpdateKycStatus(userId: number): Promise<void> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new Error('User not found');
@@ -754,4 +758,23 @@ export class KycService {
       );
     }
   }
+
+  resolveBankAccount = async (
+    bankDetails: BankDetailsDto,
+  ): Promise<StandardResponse<ResolveBankAccountResponse>> => {
+    console.log('🚀 ~ KycService ~ bankDetails:', bankDetails);
+    const response = await this.payStackService.resolveBankAccount(
+      bankDetails.accountNumber,
+      bankDetails.bankcode,
+    );
+    console.log('🚀 ~ KycService ~ response:', response);
+
+    if (!response)
+      return this.responseService.badRequest('Account could not be resolved');
+
+    return this.responseService.success(
+      'Account resolved succesfully',
+      response.data,
+    );
+  };
 }

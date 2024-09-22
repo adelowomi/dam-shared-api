@@ -9,7 +9,6 @@ import {
 import { SmileService } from '../../src/utils/services/smileID.service';
 import { FilesS3Service } from '../../src/files/infrastructure/uploader/s3/files.service';
 
-
 jest.mock('../utils/services/smileID.service');
 jest.mock('../files/infrastructure/uploader/s3/files.service');
 
@@ -30,7 +29,10 @@ describe('KYC Module', () => {
   describe('Passport Photograph Verification', () => {
     it('should initiate passport photograph verification: /api/v1/kyc/initiatiate-passportPhotograph-verification (POST)', async () => {
       const mockRedirectUrl = 'https://example.com/verify';
-      (SmileService.prototype.initiatePassportPhotographVerification as jest.Mock).mockResolvedValue(mockRedirectUrl);
+      (
+        SmileService.prototype
+          .initiatePassportPhotographVerification as jest.Mock
+      ).mockResolvedValue(mockRedirectUrl);
 
       return request(app)
         .post('/api/v1/kyc/initiatiate-passportPhotograph-verification')
@@ -43,7 +45,9 @@ describe('KYC Module', () => {
 
     it('should complete passport photograph verification: /api/v1/kyc/complete-passport-photograph-verification (PATCH)', async () => {
       const mockSessionId = 'mock-session-id';
-      (SmileService.prototype.verifyPassportPhotographSession as jest.Mock).mockResolvedValue({ success: true });
+      (
+        SmileService.prototype.verifyPassportPhotographSession as jest.Mock
+      ).mockResolvedValue({ success: true });
 
       return request(app)
         .patch('/api/v1/kyc/complete-passport-photograph-verification')
@@ -59,8 +63,13 @@ describe('KYC Module', () => {
 
   describe('Signature Upload', () => {
     it('should upload signature: /api/v1/kyc/upload-signature (PATCH)', async () => {
-      const mockFile = { buffer: Buffer.from('mock-file'), originalname: 'signature.jpg' };
-      (FilesS3Service.prototype.create as jest.Mock).mockResolvedValue({ file: { path: 'mock-path' } });
+      const mockFile = {
+        buffer: Buffer.from('mock-file'),
+        originalname: 'signature.jpg',
+      };
+      (FilesS3Service.prototype.create as jest.Mock).mockResolvedValue({
+        file: { path: 'mock-path' },
+      });
 
       return request(app)
         .patch('/api/v1/kyc/upload-signature')
@@ -110,7 +119,9 @@ describe('KYC Module', () => {
         .send(employmentDetails)
         .expect(200)
         .expect((res) => {
-          expect(res.body.employmentStatus).toBe(employmentDetails.employmentStatus);
+          expect(res.body.employmentStatus).toBe(
+            employmentDetails.employmentStatus,
+          );
           expect(res.body.companyName).toBe(employmentDetails.companyName);
           expect(res.body.employmentDetailsProvided).toBe(true);
           expect(res.body.kycCompletionPercentage).toBeGreaterThan(0);
@@ -124,7 +135,9 @@ describe('KYC Module', () => {
         bankName: 'Test Bank',
         accountNumber: '1234567890',
       };
-      (SmileService.prototype.verifyBankAccount as jest.Mock).mockResolvedValue(true);
+      (SmileService.prototype.verifyBankAccount as jest.Mock).mockResolvedValue(
+        true,
+      );
 
       return request(app)
         .patch('/api/v1/kyc/update-bank-details')
@@ -157,7 +170,9 @@ describe('KYC Module', () => {
         .send(nextOfKinDetails)
         .expect(200)
         .expect((res) => {
-          expect(res.body.nextOfKinFirstname).toBe(nextOfKinDetails.nextOfKinFirstname);
+          expect(res.body.nextOfKinFirstname).toBe(
+            nextOfKinDetails.nextOfKinFirstname,
+          );
           expect(res.body.nextOfKinEmail).toBe(nextOfKinDetails.nextOfKinEmail);
           expect(res.body.nextOfKinDetailsProvided).toBe(true);
           expect(res.body.kycCompletionPercentage).toBeGreaterThan(0);
@@ -167,12 +182,19 @@ describe('KYC Module', () => {
 
   describe('Address Proof', () => {
     it('should upload address proof: /api/v1/kyc/update-nextOfkin-details (PATCH)', async () => {
-      const mockFile = { buffer: Buffer.from('mock-file'), originalname: 'address_proof.pdf' };
+      const mockFile = {
+        buffer: Buffer.from('mock-file'),
+        originalname: 'address_proof.pdf',
+      };
       const addressProofDetails = {
         documentType: 'Utility Bill',
       };
-      (FilesS3Service.prototype.create as jest.Mock).mockResolvedValue({ file: { path: 'mock-path' } });
-      (SmileService.prototype.verifyAddressProof as jest.Mock).mockResolvedValue(true);
+      (FilesS3Service.prototype.create as jest.Mock).mockResolvedValue({
+        file: { path: 'mock-path' },
+      });
+      (
+        SmileService.prototype.verifyAddressProof as jest.Mock
+      ).mockResolvedValue(true);
 
       return request(app)
         .patch('/api/v1/kyc/update-nextOfkin-details')
