@@ -19,7 +19,7 @@ COPY tsconfig.json ./
 COPY package.json ./
 COPY package-lock.json ./
 COPY .env ./
-RUN pnpm install
+RUN npm install --force
 ADD ./src ./src
 # ADD ./db ./db
 
