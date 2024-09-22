@@ -5,10 +5,14 @@ import { UserEntity } from '../entities/user.entity';
 
 export class UserMapper {
   static toDomain(raw: UserEntity): User {
-    return plainToClass(User, {
-      ...raw,
-      photo: raw.photo ? FileMapper.toDomain(raw.photo) : null,
-    }, { excludeExtraneousValues: true });
+    return plainToClass(
+      User,
+      {
+        ...raw,
+        photo: raw.photo ? FileMapper.toDomain(raw.photo) : null,
+      },
+      { excludeExtraneousValues: true },
+    );
   }
 
   static toPersistence(domainEntity: User): UserEntity {

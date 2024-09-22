@@ -22,6 +22,10 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { NotificationsModule } from './notifications/notification.module';
 import { PaymentGatewayModule } from './payment/payment.module';
 import { FetchModule } from 'nestjs-fetch';
+import { CustomFetchModule } from './utils/modules/customFetch.module.';
+import { AutomapperModule } from '@automapper/nestjs';
+import { classes } from '@automapper/classes';
+import { UtilitiesModule } from './utilities/utilities.module';
 
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
   useClass: TypeOrmConfigService,
@@ -32,6 +36,9 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
 
 @Module({
   imports: [
+    AutomapperModule.forRoot({
+      strategyInitializer: classes(),
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig, authConfig, appConfig, fileConfig],
@@ -80,7 +87,9 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
       },
     }),
     FetchModule,
+    CustomFetchModule,
     HomeModule,
+    UtilitiesModule,
   ],
 })
 export class AppModule {}

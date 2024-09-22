@@ -21,6 +21,7 @@ import { ConfigService } from '@nestjs/config';
 import { UserService } from '../users/users.service';
 import { WalletEntity } from '../users/infrastructure/persistence/relational/entities/wallet.entity';
 import { ResponseService } from '../utils/services/response.service';
+import { UserProfile } from '../utils/mappingProfiles/UserProfile';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { ResponseService } from '../utils/services/response.service';
     SessionService,
     JwtService,
     ResponseService,
+    UserProfile,
   ],
   exports: [AuthService],
 })

@@ -40,6 +40,7 @@ import { TaxDetailsDto } from '../dto/tax-details.dto';
 import { StandardResponse } from '../../utils/services/response.service';
 import { PersnalIdVerificationModel } from '../dto/personal-id';
 import { SmileJobWebHookDto } from '../dto/smile-webhook.dto';
+import { ResolveBankAccountResponse } from '../../utils/services/models/PayStaackStandardResponse';
 
 @ApiBearerAuth()
 @ApiTags('KYC')
@@ -398,5 +399,28 @@ export class KycController {
   })
   async initiateVerification(@Req() req): Promise<StandardResponse<any>> {
     return await this.kycService.initiateSMileIdLinkVerification(req.user);
+  }
+
+  @Post('resolve-bank-account')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        {
+          $ref: getSchemaPath(StandardResponse<any>),
+        },
+        {
+          properties: {
+            payload: {},
+          },
+        },
+      ],
+    },
+  })
+  async resolveBankAccount(
+    @Req() req,
+    @Body() model: BankDetailsDto,
+  ): Promise<StandardResponse<ResolveBankAccountResponse>> {
+    return await this.kycService.resolveBankAccount(model);
   }
 }
