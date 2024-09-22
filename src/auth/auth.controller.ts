@@ -11,6 +11,7 @@ import {
   Delete,
   SerializeOptions,
   Req,
+  UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
@@ -34,6 +35,8 @@ import { AuthresendOtpDto } from './dto/resendOtp.dto';
 import { StandardResponse } from '../utils/services/response.service';
 import { UserEntity } from '../users/infrastructure/persistence/relational/entities/user.entity';
 import { AuthOtpEntity } from '../users/infrastructure/persistence/relational/entities/authOtp.entity';
+import { MapInterceptor } from '@automapper/nestjs';
+import { UserView } from '../users/dto/view-dtos/user-view';
 
 @ApiTags('Auth')
 @Controller({
@@ -216,15 +219,16 @@ export class AuthController {
         {
           properties: {
             payload: {
-              $ref: getSchemaPath(UserEntity),
+              $ref: getSchemaPath(UserView),
             },
           },
         },
       ],
     },
   })
+  // @UseInterceptors(MapInterceptor(UserEntity, UserView))
   @HttpCode(HttpStatus.OK)
-  public me(@Req() request): Promise<StandardResponse<UserEntity>> {
+  public me(@Req() request): Promise<StandardResponse<UserView>> {
     return this.service.me(request.user);
   }
 

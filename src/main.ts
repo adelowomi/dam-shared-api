@@ -13,9 +13,21 @@ import validationOptions from './utils/validation-options';
 import { AllConfigType } from './config/config.type';
 import { ResolvePromisesInterceptor } from './utils/serializer.interceptor';
 import * as bodyParser from 'body-parser';
+import errsole from 'errsole';
+import ErrsoleSequelize from 'errsole-sequelize';
+
+errsole.initialize({
+  storage: new ErrsoleSequelize({
+    dialect: 'sqlite',
+    storage: '/tmp/logs.sqlite',
+  }),
+});
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create(AppModule, {
+    cors: true,
+    snapshot: true,
+  });
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   const configService = app.get(ConfigService<AllConfigType>);
 

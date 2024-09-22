@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
-import { AllConfigType } from '../config/config.type';
 import { UserEntity } from '../users/infrastructure/persistence/relational/entities/user.entity';
 import { NotificationsEntity } from '../users/infrastructure/persistence/relational/entities/notifications.entity';
 import { TransactionEntity } from '../users/infrastructure/persistence/relational/entities/transactions.entity';
@@ -11,6 +10,10 @@ import { CardEntity } from '../users/infrastructure/persistence/relational/entit
 import { FileEntity } from '../files/infrastructure/persistence/relational/entities/file.entity';
 import { SessionEntity } from '../session/infrastructure/persistence/relational/entities/session.entity';
 import { SmileLinksEntity } from '../users/infrastructure/persistence/relational/entities/smilelinks.entity';
+import { EmploymentDetailsEntity } from '../users/infrastructure/persistence/relational/entities/employmentDetails.entity';
+import { BankDetailsEntity } from '../users/infrastructure/persistence/relational/entities/bankDetails.entity';
+import { NoxtOfKinEntity } from '../users/infrastructure/persistence/relational/entities/noxtOfKin.entity';
+import { TaxDetailsEntity } from '../users/infrastructure/persistence/relational/entities/taxDetails.entity';
 
 @Injectable()
 export class TypeOrmConfigService implements TypeOrmOptionsFactory {
@@ -42,6 +45,10 @@ export class TypeOrmConfigService implements TypeOrmOptionsFactory {
         FileEntity,
         SessionEntity,
         SmileLinksEntity,
+        EmploymentDetailsEntity,
+        BankDetailsEntity,
+        NoxtOfKinEntity,
+        TaxDetailsEntity,
       ],
       migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
       cli: {

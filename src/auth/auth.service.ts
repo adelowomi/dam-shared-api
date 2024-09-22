@@ -44,6 +44,9 @@ import {
   StandardResponse,
 } from '../utils/services/response.service';
 import { RefreshResponseDto } from './dto/refresh-response.dto';
+import { InjectMapper } from '@automapper/nestjs';
+import { Mapper } from '@automapper/core';
+import { UserView } from '../users/dto/view-dtos/user-view';
 
 @Injectable()
 export class AuthService {
@@ -62,6 +65,7 @@ export class AuthService {
     private notificationsService: NotificationsService,
     private configService: ConfigService,
     private responseService: ResponseService,
+    @InjectMapper() private readonly mapper: Mapper,
   ) {}
 
   async validateLogin(
@@ -244,7 +248,7 @@ export class AuthService {
       // Verify and update the customer's status
       user.isVerified = true;
       user.status = StatusEnum.ACTIVE;
-      user.registerAndVerifiedIsdone=true
+      user.registerAndVerifiedIsdone = true;
       user.kycCompletionStatus = {
         ...user.kycCompletionStatus,
         userRegisteredAndVerified: true,
@@ -508,7 +512,7 @@ export class AuthService {
     }
   }
 
-  async me(user: UserEntity): Promise<StandardResponse<UserEntity>> {
+  async me(user: UserEntity): Promise<StandardResponse<UserView>> {
     try {
       this.logger.log(`Fetching user data for user: ${user.id}`);
       const userProfile = await this.usersRepository.findOne({
@@ -520,7 +524,7 @@ export class AuthService {
 
       return this.responseService.success(
         'user data fetched',
-        userProfile as UserEntity,
+        await this.mapper.mapAsync(userProfile, UserEntity, UserView),
       );
     } catch (error) {
       this.logger.error(

@@ -26,6 +26,12 @@ import { AnonymousStrategy } from '../auth/strategies/anonymous.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { SmileLinksEntity } from './infrastructure/persistence/relational/entities/smilelinks.entity';
 import { FetchModule } from 'nestjs-fetch';
+import { EmploymentDetailsEntity } from './infrastructure/persistence/relational/entities/employmentDetails.entity';
+import { BankDetailsEntity } from './infrastructure/persistence/relational/entities/bankDetails.entity';
+import { NoxtOfKinEntity } from './infrastructure/persistence/relational/entities/noxtOfKin.entity';
+import { TaxDetailsEntity } from './infrastructure/persistence/relational/entities/taxDetails.entity';
+import { PayStackService } from '../utils/services/paystack.service';
+import { CustomFetchModule } from '../utils/modules/customFetch.module.';
 
 //const infrastructurePersistenceModule = RelationalUserPersistenceModule;
 
@@ -39,8 +45,13 @@ import { FetchModule } from 'nestjs-fetch';
       NotificationsEntity,
       WalletEntity,
       SmileLinksEntity,
+      EmploymentDetailsEntity,
+      BankDetailsEntity,
+      NoxtOfKinEntity,
+      TaxDetailsEntity,
     ]),
     FetchModule,
+    CustomFetchModule,
   ],
   controllers: [UsersController, KycController, WalletController],
   providers: [
@@ -55,6 +66,7 @@ import { FetchModule } from 'nestjs-fetch';
     WalletService,
     Mailer,
     ResponseService,
+    PayStackService,
     AnonymousStrategy,
   ],
   exports: [UserService],
