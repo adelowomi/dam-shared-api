@@ -60,6 +60,9 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document);
 
   app.use(bodyParser.json({ limit: '50mb' }));
+  app.use('/errsole', (req, res, next) => {
+    errsole.nestExpressProxyMiddleware('/errsole', req, res, next);
+  });
   app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
   await app.listen(configService.getOrThrow('app.port', { infer: true }));
 }
