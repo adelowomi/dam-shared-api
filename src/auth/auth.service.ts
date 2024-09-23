@@ -622,7 +622,9 @@ export class AuthService {
         return this.responseService.badRequest('invalid session or hash');
       }
 
-      const user = await this.usersService.findById(session.user.id);
+      const user = await this.usersRepository.findOne({
+        where: { id: session.userId },
+      });
       if (!user?.role) {
         this.logger.warn(
           `Token refresh failed: User not found or no role for user: ${session.user.id}`,

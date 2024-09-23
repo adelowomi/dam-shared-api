@@ -48,14 +48,10 @@ export class SessionRelationalRepository implements SessionRepository {
       throw new Error('Session not found');
     }
 
-    const updatedEntity = await this.sessionRepository.save(
-      this.sessionRepository.create(
-        SessionMapper.toPersistence({
-          ...SessionMapper.toDomain(entity),
-          ...payload,
-        }),
-      ),
-    );
+    const updatedEntity = await this.sessionRepository.save({
+      ...entity,
+      ...payload,
+    });
 
     return SessionMapper.toDomain(updatedEntity);
   }

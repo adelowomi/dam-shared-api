@@ -46,7 +46,8 @@ export class UserService {
     if (!userEntity) {
       throw new NotFoundException(`User with ID "${id}" not found`);
     }
-    return UserMapper.toDomain(userEntity);
+    const user = UserMapper.toDomain(userEntity);
+    return user;
   }
 
   async findByEmail(email: string): Promise<User | null> {
