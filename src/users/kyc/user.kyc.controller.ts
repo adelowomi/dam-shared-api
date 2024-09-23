@@ -254,6 +254,7 @@ export class KycController {
       ],
     },
   })
+  @UseGuards(AuthGuard('jwt'))
   async updateNextOfkin(
     @Req() req,
     @Body() dto: NextOfKinDto,
