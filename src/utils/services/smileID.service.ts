@@ -309,7 +309,7 @@ export class SmileService {
     model.expires_at = new Date(
       new Date().getTime() + 30 * 24 * 60 * 60 * 1000,
     ).toISOString();
-    model.callback_url = `https://webhook.site/141f523d-43a6-483b-bf68-42ad914f872a`;
+    model.callback_url = `https://stg.dam.api.sofriwebservices.com/api/v1/kyc/smile-webhook`;
     model.name = 'DLM Asset Management';
     model.company_name = 'LINKS MICROFINANCE BANK';
     model.data_privacy_policy_url = 'https://dlm.group/privacy-policy/';
