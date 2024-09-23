@@ -302,10 +302,10 @@ export class Mailer {
           <div class="footer">
             <p>Ostra Logistics</p>
             <div class="social-icons">
-              <a href="https://facebook.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/facebook-new.png" alt="Facebook"></a>
-              <a href="https://twitter.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/twitter.png" alt="Twitter"></a>
-              <a href="https://instagram.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/instagram-new.png" alt="Instagram"></a>
-              <a href="https://tiktok.com/@ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/tiktok.png" alt="TikTok"></a>
+              <a href="https://facebook.com/dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/facebook-new.png" alt="Facebook"></a>
+              <a href="https://twitter.com/dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/twitter.png" alt="Twitter"></a>
+              <a href="https://instagram.com/dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/instagram-new.png" alt="Instagram"></a>
+              <a href="https://tiktok.com/@dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/tiktok.png" alt="TikTok"></a>
             </div>
           </div>
         </div>
@@ -399,10 +399,10 @@ export class Mailer {
             <div class="footer">
               <p>Ostra Logistics</p>
               <div class="social-icons">
-                <a href="https://facebook.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/facebook-new.png" alt="Facebook"></a>
-                <a href="https://twitter.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/twitter.png" alt="Twitter"></a>
-                <a href="https://instagram.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/instagram-new.png" alt="Instagram"></a>
-                <a href="https://tiktok.com/@ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/tiktok.png" alt="TikTok"></a>
+                <a href="https://facebook.com/dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/facebook-new.png" alt="Facebook"></a>
+                <a href="https://twitter.com/dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/twitter.png" alt="Twitter"></a>
+                <a href="https://instagram.com/dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/instagram-new.png" alt="Instagram"></a>
+                <a href="https://tiktok.com/@dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/tiktok.png" alt="TikTok"></a>
               </div>
             </div>
           </div>
@@ -476,15 +476,15 @@ export class Mailer {
               <p>We are thrilled to have you join our platform. With Ostra Logistics, you can easily manage your deliveries, track orders in real-time, and more.</p>
               <p>If you have any questions or need assistance, feel free to reach out to our support team.</p>
               <p>Happy delivering!</p>
-              <p>For any questions or assistance, contact our support team at <a href="mailto:ostralogistics@gmail.com">support@ostralogistics.com</a></p>
+              <p>For any questions or assistance, contact our support team at <a href="mailto:dlmcapital@gmail.com">support@dlmcapital.com</a></p>
             </div>
             <div class="footer">
               <p>Ostra Logistics</p>
               <div class="social-icons">
-                <a href="https://facebook.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/facebook-new.png" alt="Facebook"></a>
-                <a href="https://twitter.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/twitter.png" alt="Twitter"></a>
-                <a href="https://instagram.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/instagram-new.png" alt="Instagram"></a>
-                <a href="https://tiktok.com/@ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/tiktok.png" alt="TikTok"></a>
+                <a href="https://facebook.com/dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/facebook-new.png" alt="Facebook"></a>
+                <a href="https://twitter.com/dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/twitter.png" alt="Twitter"></a>
+                <a href="https://instagram.com/dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/instagram-new.png" alt="Instagram"></a>
+                <a href="https://tiktok.com/@dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/tiktok.png" alt="TikTok"></a>
               </div>
             </div>
           </div>
@@ -566,10 +566,10 @@ export class Mailer {
         <div class="footer">
           <p>Ostra Logistics</p>
           <div class="social-icons">
-            <a href="https://facebook.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/facebook-new.png" alt="Facebook"></a>
-            <a href="https://twitter.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/twitter.png" alt="Twitter"></a>
-            <a href="https://instagram.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/instagram-new.png" alt="Instagram"></a>
-            <a href="https://tiktok.com/@ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/tiktok.png" alt="TikTok"></a>
+            <a href="https://facebook.com/dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/facebook-new.png" alt="Facebook"></a>
+            <a href="https://twitter.com/dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/twitter.png" alt="Twitter"></a>
+            <a href="https://instagram.com/dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/instagram-new.png" alt="Instagram"></a>
+            <a href="https://tiktok.com/@dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/tiktok.png" alt="TikTok"></a>
           </div>
         </div>
       </div>
@@ -614,10 +614,10 @@ export class Mailer {
     <div class="footer">
       <p>Ostra Logistics</p>
       <div class="social-icons">
-      <a href="https://facebook.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/facebook-new.png" alt="Facebook"></a>
-      <a href="https://twitter.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/twitter.png" alt="Twitter"></a>
-      <a href="https://instagram.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/instagram-new.png" alt="Instagram"></a>
-      <a href="https://tiktok.com/@ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/tiktok.png" alt="TikTok"></a>
+      <a href="https://facebook.com/dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/facebook-new.png" alt="Facebook"></a>
+      <a href="https://twitter.com/dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/twitter.png" alt="Twitter"></a>
+      <a href="https://instagram.com/dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/instagram-new.png" alt="Instagram"></a>
+      <a href="https://tiktok.com/@dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/tiktok.png" alt="TikTok"></a>
     </div>
     </div>
   </div>
@@ -659,10 +659,10 @@ export class Mailer {
         <div class="footer">
           <p>Ostra Logistics</p>
           <div class="social-icons">
-          <a href="https://facebook.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/facebook-new.png" alt="Facebook"></a>
-          <a href="https://twitter.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/twitter.png" alt="Twitter"></a>
-          <a href="https://instagram.com/ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/instagram-new.png" alt="Instagram"></a>
-          <a href="https://tiktok.com/@ostralogistics"><img src="https://img.icons8.com/fluent/48/000000/tiktok.png" alt="TikTok"></a>
+          <a href="https://facebook.com/dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/facebook-new.png" alt="Facebook"></a>
+          <a href="https://twitter.com/dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/twitter.png" alt="Twitter"></a>
+          <a href="https://instagram.com/dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/instagram-new.png" alt="Instagram"></a>
+          <a href="https://tiktok.com/@dlmcapital"><img src="https://img.icons8.com/fluent/48/000000/tiktok.png" alt="TikTok"></a>
         </div>
         </div>
       </div>
